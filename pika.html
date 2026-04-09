@@ -112,17 +112,52 @@
           <h1>Punch Tamagotchi</h1>
         </div>
         <button class="icon-button" id="settingsBtn" aria-label="Settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
         </button>
       </header>
 
       <!-- Settings Modal -->
       <div class="modal-backdrop" id="settingsBackdrop" aria-hidden="true">
-        <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div
+          class="modal glass"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settingsTitle"
+        >
           <div class="modal-header">
             <h2 id="settingsTitle">Settings</h2>
-            <button class="icon-button" id="settingsClose" aria-label="Close settings">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button
+              class="icon-button"
+              id="settingsClose"
+              aria-label="Close settings"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
 
@@ -139,7 +174,13 @@
             <p class="settings-label">Appearance</p>
             <div class="settings-row">
               <span>Dark mode</span>
-              <button class="toggle-switch" id="themeToggle" role="switch" aria-checked="false" aria-label="Toggle dark mode"></button>
+              <button
+                class="toggle-switch"
+                id="themeToggle"
+                role="switch"
+                aria-checked="false"
+                aria-label="Toggle dark mode"
+              ></button>
             </div>
           </div>
 
@@ -180,7 +221,6 @@
                 <span class="cheek cheek-right"></span>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -211,8 +251,8 @@
         <button data-action="feed" id="feedBtn">
           <span class="btn-label">Feed</span>
           <svg class="digest-ring" viewBox="0 0 36 36" aria-hidden="true">
-            <circle class="digest-ring-track" cx="18" cy="18" r="15.9"/>
-            <circle class="digest-ring-fill" cx="18" cy="18" r="15.9"/>
+            <circle class="digest-ring-track" cx="18" cy="18" r="15.9" />
+            <circle class="digest-ring-fill" cx="18" cy="18" r="15.9" />
           </svg>
           <span class="digest-countdown" id="digestCountdown"></span>
         </button>
@@ -222,10 +262,15 @@
       </section>
 
       <section class="dialog-card glass">
-        <p id="message">Punch is sitting quietly, hugging the stuffed orangutan.</p>
-        <p class="hint">Tip: your pet slowly gets hungrier and sleepier over time while this page stays open.</p>
+        <p id="message">
+          Punch is sitting quietly, hugging the stuffed orangutan.
+        </p>
+        <p class="hint">
+          Tip: your pet slowly gets hungrier and sleepier over time while this
+          page stays open.
+        </p>
       </section>
     </main>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
