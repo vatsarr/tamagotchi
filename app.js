@@ -106,6 +106,11 @@ const defaults = {
   joy: 80,
   clean: 76,
   theme: "light",
+  showWeatherBadge: true,
+  starIntensity: "normal",
+  locationLat: null,
+  locationLon: null,
+  locationName: null,
   lastSaved: null,
 };
 
@@ -141,7 +146,6 @@ const refs = {
   settingsBackdrop: document.getElementById("settingsBackdrop"),
   resetBtn: document.getElementById("resetBtn"),
   skyStars: document.getElementById("skyStars"),
-  timeBadge: document.getElementById("timeBadge"),
   sunEl: document.querySelector(".sky-sun"),
   moonEl: document.querySelector(".sky-moon"),
   sunEl2: document.querySelector(".sky-sun"),
@@ -656,18 +660,50 @@ function applyWeatherToUI(code, temp) {
   if (entry.type) refs.weatherLayer.classList.add(`wx-${entry.type}`);
 }
 
+async function fetchWeatherForCoords(lat, lon) {
+  const wx = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=celsius`,
+  ).then((r) => r.json());
+  const code = wx.current.weather_code;
+  const temp = Math.round(wx.current.temperature_2m);
+  applyWeatherToUI(code, temp);
+  const combined = getCombinedMessage(currentTimePeriod, currentWeatherType);
+  if (combined) setMessage(combined);
+}
+
+function updateLocationLabel() {
+  const el = document.getElementById("locationLabel");
+  if (!el) return;
+  if (state.locationName) {
+    el.textContent = state.locationName;
+  } else if (state.locationLat !== null) {
+    el.textContent = `${Number(state.locationLat).toFixed(2)}, ${Number(state.locationLon).toFixed(2)}`;
+  } else {
+    el.textContent = "Not set";
+  }
+}
+
 async function initWeather() {
+  // Use saved coords if available — no permission prompt needed
+  if (state.locationLat !== null && state.locationLon !== null) {
+    try {
+      await fetchWeatherForCoords(state.locationLat, state.locationLon);
+    } catch (e) {
+      refs.weatherBadge.textContent = "";
+    }
+    return;
+  }
+  // Fall back to IP geolocation (no permission needed, less accurate)
   try {
     const geo = await fetch("https://ipapi.co/json/").then((r) => r.json());
-    const { latitude: lat, longitude: lon } = geo;
-    const wx = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=celsius`,
-    ).then((r) => r.json());
-    const code = wx.current.weather_code;
-    const temp = Math.round(wx.current.temperature_2m);
-    applyWeatherToUI(code, temp);
-    const combined = getCombinedMessage(currentTimePeriod, currentWeatherType);
-    if (combined) setMessage(combined);
+    const { latitude: lat, longitude: lon, city } = geo;
+    if (!lat || !lon) throw new Error("no coords");
+    state.locationLat = lat;
+    state.locationLon = lon;
+    state.locationName = city || null;
+    saveState();
+    updateLocationLabel();
+    await fetchWeatherForCoords(lat, lon);
   } catch (e) {
     refs.weatherBadge.textContent = "";
   }
@@ -683,10 +719,26 @@ function openSettings() {
     "aria-checked",
     state.theme === "dark" ? "true" : "false",
   );
+  updateLocationLabel();
 }
 function closeSettings() {
-  refs.settingsBackdrop.classList.remove("open");
-  refs.settingsBackdrop.setAttribute("aria-hidden", "true");
+  const modal = refs.settingsBackdrop.querySelector(".modal");
+  if (modal) {
+    modal.style.transition =
+      "transform 220ms cubic-bezier(0.4, 0, 1, 1), opacity 180ms ease";
+    modal.style.transform = "translateY(100%) scale(0.97)";
+    modal.style.opacity = "0";
+    setTimeout(() => {
+      refs.settingsBackdrop.classList.remove("open");
+      refs.settingsBackdrop.setAttribute("aria-hidden", "true");
+      modal.style.transition = "";
+      modal.style.transform = "";
+      modal.style.opacity = "";
+    }, 220);
+  } else {
+    refs.settingsBackdrop.classList.remove("open");
+    refs.settingsBackdrop.setAttribute("aria-hidden", "true");
+  }
 }
 
 refs.settingsBtn.addEventListener("click", openSettings);
@@ -717,6 +769,94 @@ refs.themeToggle.addEventListener("click", () => {
     state.theme === "dark" ? "true" : "false",
   );
   render();
+});
+
+function applyStarIntensity() {
+  refs.skyStars.setAttribute("data-stars", state.starIntensity);
+  document.querySelectorAll(".star-intensity-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.intensity === state.starIntensity);
+  });
+  saveState();
+}
+
+function applyBadgePrefs() {
+  refs.weatherBadge.style.display = state.showWeatherBadge ? "" : "none";
+  document.getElementById("weatherBadgeToggle").setAttribute("aria-checked", state.showWeatherBadge ? "true" : "false");
+  saveState();
+}
+
+// Location: GPS button
+document.getElementById("geoLocateBtn").addEventListener("click", () => {
+  const btn = document.getElementById("geoLocateBtn");
+  btn.textContent = "📍 Locating…";
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      state.locationLat = lat;
+      state.locationLon = lon;
+      // Reverse-geocode city name via Open-Meteo geocoding
+      try {
+        const rg = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+        ).then((r) => r.json());
+        state.locationName = rg.address?.city || rg.address?.town || rg.address?.village || null;
+      } catch (_) {}
+      saveState();
+      updateLocationLabel();
+      btn.textContent = "✓ Location saved";
+      btn.disabled = false;
+      fetchWeatherForCoords(lat, lon).catch(() => {});
+    },
+    () => {
+      btn.textContent = "📍 Use my current location";
+      btn.disabled = false;
+      alert("Location access denied. Try setting a city name manually above.");
+    },
+  );
+});
+
+// Location: city name search
+document.getElementById("citySearchBtn").addEventListener("click", async () => {
+  const query = document.getElementById("cityInput").value.trim();
+  if (!query) return;
+  const btn = document.getElementById("citySearchBtn");
+  btn.textContent = "…";
+  try {
+    const results = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`,
+    ).then((r) => r.json());
+    const place = results.results?.[0];
+    if (!place) throw new Error("not found");
+    state.locationLat = place.latitude;
+    state.locationLon = place.longitude;
+    state.locationName = place.name + (place.country ? `, ${place.country}` : "");
+    saveState();
+    updateLocationLabel();
+    document.getElementById("cityInput").value = "";
+    btn.textContent = "✓";
+    setTimeout(() => (btn.textContent = "Set"), 1500);
+    fetchWeatherForCoords(place.latitude, place.longitude).catch(() => {});
+  } catch (e) {
+    btn.textContent = "Set";
+    alert(`City "${query}" not found. Try a different spelling.`);
+  }
+});
+
+document.getElementById("cityInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("citySearchBtn").click();
+});
+
+document.getElementById("weatherBadgeToggle").addEventListener("click", () => {
+  state.showWeatherBadge = !state.showWeatherBadge;
+  applyBadgePrefs();
+});
+
+document.querySelectorAll(".star-intensity-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    state.starIntensity = btn.dataset.intensity;
+    applyStarIntensity();
+  });
 });
 
 refs.resetBtn.addEventListener("click", () => {
@@ -804,6 +944,8 @@ refs.themeToggle.setAttribute(
   state.theme === "dark" ? "true" : "false",
 );
 
+applyBadgePrefs();
+applyStarIntensity();
 render();
 updateDayNight();
 setInterval(updateDayNight, 60 * 1000);

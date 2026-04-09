@@ -184,6 +184,40 @@
             </div>
           </div>
 
+          <div class="settings-section">
+            <p class="settings-label">Location</p>
+            <div class="settings-row">
+              <span>City</span>
+              <span id="locationLabel" style="font-size:13px;color:var(--text-secondary);text-align:right;max-width:55%;">Not set</span>
+            </div>
+            <div style="display:flex;gap:8px;padding-bottom:10px;">
+              <input
+                type="text"
+                id="cityInput"
+                placeholder="e.g. Tallinn"
+                autocomplete="off"
+                style="flex:1;background:rgba(120,120,128,0.1);border:1px solid var(--glass-border-dim);border-radius:var(--r-pill);padding:7px 14px;font-size:14px;color:var(--text-on-glass);font-family:inherit;outline:none;"
+              />
+              <button id="citySearchBtn" style="padding:7px 14px;border-radius:var(--r-pill);background:rgba(0,122,255,0.14);border:1px solid rgba(0,122,255,0.25);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;">Set</button>
+            </div>
+            <button id="geoLocateBtn" style="width:100%;padding:8px 14px;border-radius:var(--r-lg);background:rgba(120,120,128,0.1);border:1px solid var(--glass-border-dim);color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:10px;">📍 Use my current location</button>
+            <p class="settings-hint">Coordinates are saved locally — your browser won't ask again.</p>
+          </div>
+
+          <div class="settings-section">
+            <p class="settings-label">Sky</p>
+            <div class="settings-row">
+              <span>Weather pill</span>
+              <button
+                class="toggle-switch"
+                id="weatherBadgeToggle"
+                role="switch"
+                aria-checked="true"
+                aria-label="Toggle weather pill"
+              ></button>
+            </div>
+          </div>
+
           <div class="settings-section settings-section--danger">
             <p class="settings-label">Danger zone</p>
             <button class="btn-reset" id="resetBtn">Reset save file</button>
@@ -197,7 +231,6 @@
           <span class="sky-sun" aria-hidden="true">☀️</span>
           <span class="sky-moon" aria-hidden="true">🌕</span>
           <div class="sky-stars" id="skyStars"></div>
-          <span class="time-badge" id="timeBadge"></span>
           <div class="weather-layer" id="weatherLayer"></div>
           <span class="weather-badge" id="weatherBadge"></span>
         </div>

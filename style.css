@@ -257,18 +257,18 @@ h1 {
   height: 2px;
   background: #fff;
   border-radius: 50%;
-  animation: star-twinkle var(--twinkle-dur, 3.5s) ease-in-out infinite;
+  animation: star-twinkle var(--twinkle-dur, 5s) ease-in-out infinite;
   animation-delay: var(--twinkle-delay, 0s);
 }
 @keyframes star-twinkle {
   0%,
   100% {
-    opacity: var(--star-hi, 0.55);
+    opacity: var(--star-hi, 0.35);
     transform: scale(1);
   }
   50% {
-    opacity: var(--star-lo, 0.25);
-    transform: scale(0.85);
+    opacity: var(--star-lo, 0.15);
+    transform: scale(0.92);
   }
 }
 
@@ -1846,12 +1846,122 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0 10px;
+  padding: 8px 0 10px;
 }
 .settings-row span {
   font-size: 15px;
   font-weight: 500;
   color: var(--text-on-glass);
+}
+
+/* ── MODAL SHEET ANIMATION ──────────────────────────────────────── */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    background var(--t-mid) var(--ease-out),
+    backdrop-filter var(--t-mid) var(--ease-out),
+    -webkit-backdrop-filter var(--t-mid) var(--ease-out),
+    visibility 0s linear var(--t-mid);
+}
+
+.modal-backdrop.open {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px) saturate(1.5);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5);
+  pointer-events: auto;
+  visibility: visible;
+  transition:
+    background var(--t-mid) var(--ease-out),
+    backdrop-filter var(--t-mid) var(--ease-out),
+    -webkit-backdrop-filter var(--t-mid) var(--ease-out),
+    visibility 0s linear 0s;
+}
+
+.modal {
+  width: min(100%, 480px);
+  max-height: 86vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--r-xl) var(--r-xl) var(--r-md) var(--r-md);
+  padding-bottom: 32px;
+  transform: translateY(100%) scale(0.96);
+  opacity: 0;
+  transition:
+    transform var(--t-slow) var(--ease-spring),
+    opacity var(--t-mid) var(--ease-out);
+  will-change: transform, opacity;
+}
+
+.modal-backdrop.open .modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Drag handle pill */
+.modal::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: rgba(120, 120, 128, 0.28);
+  margin: 10px auto 0;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--glass-border-dim);
+  position: sticky;
+  top: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: 1;
+}
+
+.modal-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-on-glass);
+}
+
+.settings-section {
+  padding: 0 18px 14px;
+  border-bottom: 1px solid var(--glass-border-dim);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-section--danger .settings-label {
+  color: var(--accent-err);
+  opacity: 0.7;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding-top: 16px;
+  margin-bottom: 10px;
 }
 
 /* iOS-style toggle switch */
@@ -1924,6 +2034,72 @@ h1 {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── SETTINGS TOGGLES ──────────────────────────────────────────── */
+
+.toggle-switch {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  border-radius: var(--r-pill);
+  border: none;
+  background: rgba(120, 120, 128, 0.22);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition:
+    background var(--t-mid) var(--ease-out),
+    box-shadow var(--t-mid) var(--ease-out);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Thumb */
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.22),
+    0 1px 2px rgba(0, 0, 0, 0.14);
+  transition:
+    transform var(--t-mid) var(--ease-spring),
+    width var(--t-fast) var(--ease-out);
+}
+
+/* On state */
+.toggle-switch[aria-checked="true"] {
+  background: var(--accent-2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.toggle-switch[aria-checked="true"]::after {
+  transform: translateX(20px);
+}
+
+/* Squish thumb on press */
+.toggle-switch:active::after {
+  width: 31px;
+}
+
+.toggle-switch[aria-checked="true"]:active::after {
+  width: 31px;
+  transform: translateX(16px);
+}
+
+/* Focus ring */
+.toggle-switch:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(0, 122, 255, 0.38),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 /* ── IDLE ANIMATIONS ────────────────────────────────────────────── */
