@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pika Tamagotchi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <style type="text/css"></style>
+    <script
+      type="text/javascript"
+      data-name="TokenSigning"
+      data-by="Web-eID extension"
+    >
+      (function pageScript() {
+        let hasDeprecationWarningDisplayed = false;
+        const eidPromises = {};
+        window.addEventListener(
+          "message",
+          function (event) {
+            if (event.source !== window) return;
+            if (event.data.src && event.data.src === "background.js") {
+              console.log("Page received: ");
+              console.log(event.data);
+              if (event.data.nonce) {
+                const p = eidPromises[event.data.nonce];
+                if (event.data.result === "ok") {
+                  if (event.data.signature !== undefined) {
+                    p.resolve({ hex: event.data.signature });
+                  } else if (event.data.version !== undefined) {
+                    p.resolve(event.data.extension + "/" + event.data.version);
+                  } else if (event.data.cert !== undefined) {
+                    p.resolve({ hex: event.data.cert });
+                  } else {
+                    console.log("No idea how to handle message");
+                    console.log(event.data);
+                  }
+                } else {
+                  p.reject(new Error(event.data.result));
+                }
+                delete eidPromises[event.data.nonce];
+              } else {
+                console.log("No nonce in event msg");
+              }
+            }
+          },
+          false,
+        );
+        function nonce() {
+          let val = "";
+          const hex = "abcdefghijklmnopqrstuvwxyz0123456789";
+          for (let i = 0; i < 16; i++)
+            val += hex.charAt(Math.floor(Math.random() * hex.length));
+          return val;
+        }
+        function messagePromise(msg) {
+          if (!hasDeprecationWarningDisplayed) {
+            console.warn(
+              "TokenSigning API is deprecated. Please consider switching to the new Web-eID library.",
+            );
+            hasDeprecationWarningDisplayed = true;
+          }
+          return new Promise(function (resolve, reject) {
+            window.postMessage(msg, "*");
+            eidPromises[msg.nonce] = { resolve, reject };
+          });
+        }
+        window.TokenSigning = class TokenSigning {
+          getCertificate(options) {
+            const msg = {
+              src: "page.js",
+              nonce: nonce(),
+              type: "CERT",
+              lang: options.lang,
+              filter: options.filter,
+            };
+            console.log("getCertificate()");
+            return messagePromise(msg);
+          }
+          sign(cert, hash, options) {
+            const msg = {
+              src: "page.js",
+              nonce: nonce(),
+              type: "SIGN",
+              cert: cert.hex,
+              hash: hash.hex,
+              hashtype: hash.type,
+              lang: options.lang,
+              info: options.info,
+            };
+            console.log("sign()");
+            return messagePromise(msg);
+          }
+          getVersion() {
+            const msg = {
+              src: "page.js",
+              nonce: nonce(),
+              type: "VERSION",
+            };
+            console.log("getVersion()");
+            return messagePromise(msg);
+          }
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Pocket companion</p>
+          <h1>Pika Tamagotchi</h1>
+        </div>
+        <button class="icon-button" id="themeToggle" aria-label="Toggle theme">
+          ◐
+        </button>
+      </header>
+
+      <section class="pet-card">
+        <div class="sky"></div>
+        <div class="pet-stage">
+          <div class="pet" id="pet" aria-label="Pika pet">
+            <div class="ear ear-left"></div>
+            <div class="ear ear-right"></div>
+            <div class="arm arm-left"></div>
+            <div class="arm arm-right"></div>
+            <div class="body">
+              <div class="face">
+                <span class="eye eye-left"></span>
+                <span class="eye eye-right"></span>
+                <span class="nose"></span>
+                <span class="mouth"></span>
+                <span class="cheek cheek-left"></span>
+                <span class="cheek cheek-right"></span>
+                <span class="whisker whisker-left-top"></span>
+                <span class="whisker whisker-left-bottom"></span>
+                <span class="whisker whisker-right-top"></span>
+                <span class="whisker whisker-right-bottom"></span>
+              </div>
+              <div class="belly"></div>
+            </div>
+            <div class="foot foot-left"></div>
+            <div class="foot foot-right"></div>
+          </div>
+        </div>
+
+        <div class="status-panel">
+          <div class="name-row">
+            <label for="petName" class="sr-only">Pet name</label>
+            <input id="petName" maxlength="18" value="Pico" />
+            <button id="renameBtn">Rename</button>
+          </div>
+          <p class="mood-line">Mood: <strong id="moodText">Content</strong></p>
+          <div class="bars">
+            <div class="stat">
+              <span>Hunger</span>
+              <div class="meter"><i id="hungerBar"></i></div>
+            </div>
+            <div class="stat">
+              <span>Energy</span>
+              <div class="meter"><i id="energyBar"></i></div>
+            </div>
+            <div class="stat">
+              <span>Joy</span>
+              <div class="meter"><i id="joyBar"></i></div>
+            </div>
+            <div class="stat">
+              <span>Cleanliness</span>
+              <div class="meter"><i id="cleanBar"></i></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <button data-action="feed">Feed</button>
+        <button data-action="play">Play</button>
+        <button data-action="sleep">Nap</button>
+        <button data-action="clean">Clean</button>
+      </section>
+
+      <section class="dialog-card">
+        <p id="message">Pico is watching the alpine clouds drift by.</p>
+        <p class="hint">
+          Tip: your pet slowly gets hungrier and sleepier over time while this
+          page stays open.
+        </p>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
