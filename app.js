@@ -120,8 +120,12 @@ const refs = {
   statJoy:    document.getElementById("statJoy"),
   statClean:  document.getElementById("statClean"),
   // Controls
-  renameBtn:   document.getElementById("renameBtn"),
-  themeToggle: document.getElementById("themeToggle"),
+  renameBtn:    document.getElementById("renameBtn"),
+  themeToggle:  document.getElementById("themeToggle"),
+  settingsBtn:  document.getElementById("settingsBtn"),
+  settingsClose: document.getElementById("settingsClose"),
+  settingsBackdrop: document.getElementById("settingsBackdrop"),
+  resetBtn:     document.getElementById("resetBtn"),
   // Sky
   skyStars:    document.getElementById("skyStars"),
   timeBadge:   document.getElementById("timeBadge"),
@@ -294,6 +298,7 @@ function driftStats() {
   state.joy    = clamp(state.joy    + dJ);
   state.clean  = clamp(state.clean  + dC);
   render();
+  checkEnergyWakeUp();
 }
 
 
@@ -427,6 +432,8 @@ function updateDayNight() {
   const period = getTimePeriod(hour);
 
   document.documentElement.setAttribute("data-time", period.name);
+  if (!lastKnownPeriod) lastKnownPeriod = period.name;
+  checkPeriodWakeUp(period.name);
   currentTimePeriod = period.name;
   syncPetClasses();
 
@@ -633,7 +640,258 @@ function startDigestCountdown() {
 }
 
 
+// ── 9b. ANIMATION HELPERS ────────────────────────────────────
+
+const petEl    = document.getElementById("pet");
+const stageEl  = petEl.closest(".pet-stage") || petEl.parentElement;
+
+function triggerAnim(className, durationMs) {
+  petEl.classList.remove("action-munch","action-excited","action-yawn","action-blink");
+  void petEl.offsetWidth; // force reflow so re-adding the class restarts animation
+  petEl.classList.add(className);
+  setTimeout(() => petEl.classList.remove(className), durationMs);
+}
+
+function spawnStars(count = 6) {
+  const emojis = ["⭐","✨","💫","🌟"];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("span");
+    el.className = "star-burst";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.4 - 0.2);
+    const dist  = 38 + Math.random() * 24;
+    el.style.cssText = `left:50%;top:40%;--dx:${Math.cos(angle)*dist}px;--dy:${Math.sin(angle)*dist}px;animation-delay:${i*0.04}s`;
+    stageEl.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
+}
+
+function spawnZzz(count = 3) {
+  const letters = ["z","Z","z"];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("span");
+    el.className = "zzz-particle";
+    el.textContent = letters[i % letters.length];
+    const dx = (Math.random() * 30 - 15);
+    el.style.cssText = `left:${52 + dx}%;top:18%;font-size:${13+i*4}px;--dx:${dx}px;animation-delay:${i*0.28}s`;
+    stageEl.appendChild(el);
+    setTimeout(() => el.remove(), 1800);
+  }
+}
+
+function spawnBubbles(count = 9) {
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div");
+    el.className = "soap-bubble";
+    const size = 10 + Math.random() * 18;
+    const startX = 30 + Math.random() * 40;
+    const dx  = (Math.random() * 40 - 20);
+    const ddx = dx + (Math.random() * 20 - 10);
+    const dur = 0.9 + Math.random() * 0.7;
+    el.style.cssText = `width:${size}px;height:${size}px;left:${startX}%;bottom:20%;--dx:${dx}px;--ddx:${ddx}px;--dur:${dur}s;--sf:${0.7+Math.random()*0.6};animation-delay:${i*0.08}s`;
+    stageEl.appendChild(el);
+    setTimeout(() => el.remove(), (dur + i * 0.08 + 0.3) * 1000);
+  }
+}
+
+
+// ── 9b-ii. WAKE-UP SYSTEM ────────────────────────────────────
+
+// Track last known time period so we detect transitions
+let lastKnownPeriod = null;
+// Prevent duplicate wake events firing too close together
+let lastWakeTime = 0;
+const WAKE_COOLDOWN_MS = 60000; // at most one wake event per minute
+
+function playWakeUp(reason) {
+  const now = Date.now();
+  if (now - lastWakeTime < WAKE_COOLDOWN_MS) return;
+  lastWakeTime = now;
+
+  // Stop any current idle animation before waking
+  idleAnimLocked = true;
+  const allIdle = IDLE_ANIMS.map(a => a.cls);
+  allIdle.forEach(c => petEl.classList.remove(c));
+
+  // Trigger the stretch animation
+  petEl.classList.add("action-wakeup");
+  setTimeout(() => {
+    petEl.classList.remove("action-wakeup");
+    idleAnimLocked = false;
+  }, 1500);
+
+  // Message varies by reason
+  const n = state.name;
+  const msgs = {
+    dawn:        `${n} stirs at dawn, yawns widely, and stretches both arms. Good morning! 🌅`,
+    morning:     `${n} wakes up properly — eyes wide, arms out, ready for the day! ☀️`,
+    lowEnergy:   `${n} jolts awake after nearly dozing off. Those eyes snap open! 👀`,
+    interaction: `${n} snaps out of a nap as you tap — arms up, big stretch! 🐒`,
+    tabFocus:    `${n} perks up as you return — a sleepy stretch and a curious look. 👋`,
+    highEnergy:  `${n} feels refreshed and leaps up with a full-body stretch! 💪`,
+  };
+  setMessage(msgs[reason] || msgs.interaction);
+}
+
+// Called from updateDayNight when time period changes
+function checkPeriodWakeUp(newPeriod) {
+  if (!lastKnownPeriod || newPeriod === lastKnownPeriod) return;
+  const prev = lastKnownPeriod;
+  lastKnownPeriod = newPeriod;
+
+  // Dawn: always wake (night → dawn transition)
+  if (newPeriod === "dawn" && (prev === "latenight" || prev === "night")) {
+    playWakeUp("dawn");
+    return;
+  }
+  // Morning: wake if energy was restored overnight
+  if (newPeriod === "morning" && state.energy > 55) {
+    playWakeUp("morning");
+    return;
+  }
+  // Evening winding down: light doze nudge handled by idle scheduler
+}
+
+// Called whenever any button is pressed while pet looks sleepy
+function checkInteractionWakeUp() {
+  // Only trigger if pet was visually dozed / very low energy
+  if (state.energy > 35) return;
+  if (petEl.classList.contains("idle-doze") || petEl.classList.contains("idle-yawn")) {
+    playWakeUp("interaction");
+  }
+}
+
+// Page visibility: wake up when user returns to tab after being away
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  const now = Date.now();
+  // Only trigger if we were hidden for at least 30 seconds
+  if (now - (state.lastSaved || 0) < 30000) return;
+
+  if (state.energy < 30) {
+    // Pet was exhausted while away — may have recovered a bit via offline drift
+    playWakeUp("tabFocus");
+  } else if (state.energy > 70) {
+    playWakeUp("highEnergy");
+  }
+});
+
+// Low-energy auto-wake: if pet dozes while energy < 20 and then
+// a drift tick pushes energy back above 30 (e.g. after sleeping)
+let prevEnergy = state.energy;
+function checkEnergyWakeUp() {
+  const e = state.energy;
+  if (prevEnergy < 25 && e >= 30) {
+    // Energy just crossed the 30 threshold upward
+    playWakeUp("lowEnergy");
+  }
+  prevEnergy = e;
+}
+
+
+// ── 9c. IDLE ANIMATION SCHEDULER ──────────────────────────────
+
+// All idle classes + their durations in ms
+// Base anim definitions — weights are overridden dynamically by pickIdle()
+const IDLE_ANIMS = [
+  { cls: "idle-tailwag", dur:  600, baseWeight: 4 },
+  { cls: "idle-scratch", dur:  950, baseWeight: 3 },
+  { cls: "idle-look",    dur: 1050, baseWeight: 3 },
+  { cls: "idle-bounce",  dur:  700, baseWeight: 3 },
+  { cls: "idle-groom",   dur: 1150, baseWeight: 3 },
+  { cls: "idle-sniff",   dur: 1050, baseWeight: 2 },
+  { cls: "idle-wave",    dur:  900, baseWeight: 2 },
+  { cls: "idle-yawn",    dur: 1650, baseWeight: 0 }, // weight set by energy
+  { cls: "idle-doze",    dur: 2050, baseWeight: 0, onStart: () => spawnZzz(2) }, // weight set by energy
+  { cls: "idle-shiver",  dur: 1150, baseWeight: 1 },
+];
+
+// Weighted random pick — yawn/doze weights scale with tiredness
+function pickIdle() {
+  const e = state.energy;          // 0–100
+  const tiredness = Math.max(0, (60 - e) / 60); // 0 at e≥60, 1 at e=0
+
+  const weighted = IDLE_ANIMS.map(a => {
+    let w = a.baseWeight;
+    if (a.cls === "idle-yawn") {
+      // starts appearing at energy < 60, peaks at 0
+      w = Math.round(lerp(0, 5, tiredness));
+    }
+    if (a.cls === "idle-doze") {
+      // only at energy < 35, max weight 4
+      w = e < 35 ? Math.round(lerp(0, 4, (35 - e) / 35)) : 0;
+    }
+    // Suppress energetic anims when exhausted
+    if ((a.cls === "idle-bounce" || a.cls === "idle-wave") && e < 25) w = 0;
+    return { ...a, weight: w };
+  });
+
+  const pool = weighted.flatMap(a => Array(Math.max(0, a.weight)).fill(a));
+  if (!pool.length) return IDLE_ANIMS[0]; // fallback to tailwag
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function lerp(a, b, t) { return a + (b - a) * Math.min(1, Math.max(0, t)); }
+
+let idleAnimLocked = false; // don't interrupt action animations
+
+function fireIdleAnim() {
+  if (idleAnimLocked) return;
+  // Don't play idle while an action anim class is active
+  const actionClasses = ["action-munch","action-excited","action-yawn","action-blink"];
+  if (actionClasses.some(c => petEl.classList.contains(c))) return;
+
+  const anim = pickIdle();
+  petEl.classList.add(anim.cls);
+  if (anim.onStart) anim.onStart();
+  idleAnimLocked = true;
+  setTimeout(() => {
+    petEl.classList.remove(anim.cls);
+    idleAnimLocked = false;
+  }, anim.dur + 80);
+}
+
+// Lock idle during action anims so they don't clash
+// triggerAnim is defined elsewhere; we wrap it by patching idleAnimLocked around calls.
+// The actual triggerAnim call sites now call lockIdleAround() instead.
+function lockIdleForDuration(durationMs) {
+  idleAnimLocked = true;
+  setTimeout(() => { idleAnimLocked = false; }, durationMs + 100);
+}
+
+// Schedule idle animations: fire one every 3-7 seconds at random
+function scheduleNextIdle() {
+  const delay = 3000 + Math.random() * 4000;
+  setTimeout(() => {
+    fireIdleAnim();
+    scheduleNextIdle();
+  }, delay);
+}
+scheduleNextIdle();
+
+
 // ── 10. EVENT LISTENERS ──────────────────────────────────────
+
+// Settings modal open / close
+function openSettings() {
+  refs.settingsBackdrop.classList.add("open");
+  refs.settingsBackdrop.setAttribute("aria-hidden", "false");
+  refs.nameInput.value = state.name;
+  refs.themeToggle.setAttribute("aria-checked", state.theme === "dark" ? "true" : "false");
+}
+function closeSettings() {
+  refs.settingsBackdrop.classList.remove("open");
+  refs.settingsBackdrop.setAttribute("aria-hidden", "true");
+}
+
+refs.settingsBtn.addEventListener("click", openSettings);
+refs.settingsClose.addEventListener("click", closeSettings);
+refs.settingsBackdrop.addEventListener("click", (e) => {
+  if (e.target === refs.settingsBackdrop) closeSettings();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSettings();
+});
 
 refs.renameBtn.addEventListener("click", () => {
   const next = refs.nameInput.value.trim();
@@ -641,21 +899,54 @@ refs.renameBtn.addEventListener("click", () => {
   state.name = next;
   setMessage(`${state.name} blinks curiously. Name updated.`);
   render();
+  closeSettings();
 });
 
 refs.themeToggle.addEventListener("click", () => {
-  state.theme = state.theme === "light" ? "dark" : "light";
+  state.theme = state.theme === "dark" ? "light" : "dark";
+  refs.themeToggle.setAttribute("aria-checked", state.theme === "dark" ? "true" : "false");
   render();
 });
 
+refs.resetBtn.addEventListener("click", () => {
+  if (!confirm("Reset everything and start fresh? This cannot be undone.")) return;
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  Object.assign(state, { ...defaults, lastSaved: null });
+  lastFeedTime = 0;
+  setMessage(`${state.name} arrives, blinking in the light. A fresh start! 🌱`);
+  render();
+  closeSettings();
+});
+
 refs.feedBtn.addEventListener("click", () => {
+  checkInteractionWakeUp();
   const before = lastFeedTime;
   applyAction("feed");
+  triggerAnim("action-munch", 700);
+  lockIdleForDuration(700);
   if (lastFeedTime !== before) startDigestCountdown();
 });
 
 document.querySelectorAll("[data-action]:not([data-action='feed'])").forEach(btn => {
-  btn.addEventListener("click", () => applyAction(btn.dataset.action));
+  btn.addEventListener("click", () => {
+    checkInteractionWakeUp();
+    applyAction(btn.dataset.action);
+    if (btn.dataset.action === "play") {
+      triggerAnim("action-excited", 750);
+      lockIdleForDuration(750);
+      spawnStars(7);
+    }
+    if (btn.dataset.action === "sleep") {
+      triggerAnim("action-yawn", 1100);
+      lockIdleForDuration(1100);
+      spawnZzz(3);
+    }
+    if (btn.dataset.action === "clean") {
+      triggerAnim("action-blink", 600);
+      lockIdleForDuration(600);
+      spawnBubbles(10);
+    }
+  });
 });
 
 
@@ -670,6 +961,9 @@ if (state.lastSaved) {
     setMessage(`${state.name} missed you! You were away for ${mins} minute${mins !== 1 ? "s" : ""}.`);
   }
 }
+
+// Sync toggle switch visual state with persisted theme
+refs.themeToggle.setAttribute("aria-checked", state.theme === "dark" ? "true" : "false");
 
 render();                                      // initial paint
 updateDayNight();                              // set sky + time badge

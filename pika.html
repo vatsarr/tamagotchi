@@ -111,10 +111,45 @@
           <p class="eyebrow">Pocket companion</p>
           <h1>Punch Tamagotchi</h1>
         </div>
-        <button class="icon-button" id="themeToggle" aria-label="Toggle theme">
-          ◐
+        <button class="icon-button" id="settingsBtn" aria-label="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </header>
+
+      <!-- Settings Modal -->
+      <div class="modal-backdrop" id="settingsBackdrop" aria-hidden="true">
+        <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+          <div class="modal-header">
+            <h2 id="settingsTitle">Settings</h2>
+            <button class="icon-button" id="settingsClose" aria-label="Close settings">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <div class="settings-section">
+            <p class="settings-label">Companion name</p>
+            <div class="name-row">
+              <label for="petName" class="sr-only">Pet name</label>
+              <input id="petName" maxlength="18" value="Punch" />
+              <button id="renameBtn">Save</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <p class="settings-label">Appearance</p>
+            <div class="settings-row">
+              <span>Dark mode</span>
+              <button class="toggle-switch" id="themeToggle" role="switch" aria-checked="false" aria-label="Toggle dark mode"></button>
+            </div>
+          </div>
+
+          <div class="settings-section settings-section--danger">
+            <p class="settings-label">Danger zone</p>
+            <button class="btn-reset" id="resetBtn">Reset save file</button>
+            <p class="settings-hint">Clears all progress and starts fresh.</p>
+          </div>
+        </div>
+      </div>
 
       <section class="pet-card glass">
         <div class="sky">
@@ -150,11 +185,6 @@
         </div>
 
         <div class="status-panel">
-          <div class="name-row">
-            <label for="petName" class="sr-only">Pet name</label>
-            <input id="petName" maxlength="18" value="Pico" />
-            <button id="renameBtn">Rename</button>
-          </div>
           <p class="mood-line">Mood: <strong id="moodText">Content</strong></p>
           <div class="bars">
             <div class="stat" id="statHunger">
