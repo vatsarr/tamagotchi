@@ -11,14 +11,14 @@ let _state, _petEl, _stageEl, _setMessage;
 // ── Animation settings (derived from state + system prefs) ───
 // Recomputed by applyAnimSettings() whenever state changes.
 let _reducedMotion = false;
-let _particleScale  = 1;   // 0 | 0.5 | 1 | 1.5  (off/low/normal/high)
-let _idleMinMs      = 3000;
-let _idleRangeMs    = 4000;
+let _particleScale = 1; // 0 | 0.5 | 1 | 1.5  (off/low/normal/high)
+let _idleMinMs = 3000;
+let _idleRangeMs = 4000;
 
 export function initAnimations({ state, petEl, stageEl, setMessage }) {
-  _state    = state;
-  _petEl    = petEl;
-  _stageEl  = stageEl;
+  _state = state;
+  _petEl = petEl;
+  _stageEl = stageEl;
   _setMessage = setMessage;
   // Listen for OS-level reduced-motion changes
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -37,34 +37,36 @@ export function initAnimations({ state, petEl, stageEl, setMessage }) {
  * Call from app.js whenever state.starIntensity changes.
  */
 export function applyAnimSettings() {
-  _reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  _reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
   if (_reducedMotion) {
     _particleScale = 0;
-    _idleMinMs     = 6000;
-    _idleRangeMs   = 6000;
+    _idleMinMs = 6000;
+    _idleRangeMs = 6000;
     return;
   }
   const intensity = _state?.starIntensity ?? "normal";
   switch (intensity) {
     case "off":
       _particleScale = 0;
-      _idleMinMs     = 5000;
-      _idleRangeMs   = 5000;
+      _idleMinMs = 5000;
+      _idleRangeMs = 5000;
       break;
     case "low":
       _particleScale = 0.5;
-      _idleMinMs     = 4000;
-      _idleRangeMs   = 5000;
+      _idleMinMs = 4000;
+      _idleRangeMs = 5000;
       break;
     case "high":
       _particleScale = 1.5;
-      _idleMinMs     = 2000;
-      _idleRangeMs   = 3000;
+      _idleMinMs = 2000;
+      _idleRangeMs = 3000;
       break;
     default: // "normal"
       _particleScale = 1;
-      _idleMinMs     = 3000;
-      _idleRangeMs   = 4000;
+      _idleMinMs = 3000;
+      _idleRangeMs = 4000;
   }
 }
 
@@ -83,7 +85,10 @@ let _idleLockTimer = null;
 
 export function triggerAnim(className, durationMs) {
   // Cancel any in-flight action animation timer
-  if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
+  if (_animTimer) {
+    clearTimeout(_animTimer);
+    _animTimer = null;
+  }
   ACTION_CLASSES.forEach((c) => _petEl.classList.remove(c));
   void _petEl.offsetWidth; // force reflow to restart animation
   _petEl.classList.add(className);
@@ -94,7 +99,10 @@ export function triggerAnim(className, durationMs) {
 }
 
 export function lockIdleForDuration(durationMs) {
-  if (_idleLockTimer) { clearTimeout(_idleLockTimer); _idleLockTimer = null; }
+  if (_idleLockTimer) {
+    clearTimeout(_idleLockTimer);
+    _idleLockTimer = null;
+  }
   idleAnimLocked = true;
   _idleLockTimer = setTimeout(() => {
     idleAnimLocked = false;
@@ -163,8 +171,14 @@ export function playWakeUp(reason) {
   if (now - lastWakeTime < WAKE_COOLDOWN_MS) return;
   lastWakeTime = now;
 
-  if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
-  if (_idleLockTimer) { clearTimeout(_idleLockTimer); _idleLockTimer = null; }
+  if (_animTimer) {
+    clearTimeout(_animTimer);
+    _animTimer = null;
+  }
+  if (_idleLockTimer) {
+    clearTimeout(_idleLockTimer);
+    _idleLockTimer = null;
+  }
   idleAnimLocked = true;
   IDLE_ANIMS.forEach((a) => _petEl.classList.remove(a.cls));
   ACTION_CLASSES.forEach((c) => _petEl.classList.remove(c));
@@ -231,15 +245,15 @@ export function checkEnergyWakeUp() {
 // ── Idle animation scheduler ─────────────────────────────────
 
 export const IDLE_ANIMS = [
-  { cls: "idle-tailwag", dur: 800,  baseWeight: 4 },
+  { cls: "idle-tailwag", dur: 800, baseWeight: 4 },
   { cls: "idle-scratch", dur: 1200, baseWeight: 3 },
-  { cls: "idle-look",    dur: 1400, baseWeight: 3 },
-  { cls: "idle-bounce", dur: 900,  baseWeight: 3 },
-  { cls: "idle-groom",  dur: 1500, baseWeight: 3 },
-  { cls: "idle-sniff",  dur: 1300, baseWeight: 2 },
-  { cls: "idle-wave",   dur: 1100, baseWeight: 2 },
-  { cls: "idle-yawn",   dur: 2200, baseWeight: 0 },
-  { cls: "idle-doze",   dur: 2600, baseWeight: 0, onStart: () => spawnZzz(2) },
+  { cls: "idle-look", dur: 1400, baseWeight: 3 },
+  { cls: "idle-bounce", dur: 900, baseWeight: 3 },
+  { cls: "idle-groom", dur: 1500, baseWeight: 3 },
+  { cls: "idle-sniff", dur: 1300, baseWeight: 2 },
+  { cls: "idle-wave", dur: 1100, baseWeight: 2 },
+  { cls: "idle-yawn", dur: 2200, baseWeight: 0 },
+  { cls: "idle-doze", dur: 2600, baseWeight: 0, onStart: () => spawnZzz(2) },
   { cls: "idle-shiver", dur: 1300, baseWeight: 1 },
 ];
 
@@ -334,7 +348,8 @@ function initEyeTracking(petEl) {
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       const tx = (dx / dist) * Math.min(dist * 0.15, MAX_DIST);
       const ty = (dy / dist) * Math.min(dist * 0.15, MAX_DIST);
-      pupils[i].style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
+      pupils[i].style.transform =
+        `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
     });
   }
 

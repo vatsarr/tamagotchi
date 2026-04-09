@@ -90,14 +90,18 @@ function loadState() {
   try {
     const s = localStorage.getItem(SAVE_KEY);
     if (s) return JSON.parse(s);
-  } catch (e) {}
+  } catch (e) {
+    console.warn("[pikpika] loadState failed:", e);
+  }
   return null;
 }
 
 function saveState() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  } catch (e) {}
+  } catch (e) {
+    console.warn("[pikpika] saveState failed:", e);
+  }
 }
 
 const defaults = {
@@ -690,11 +694,30 @@ async function initWeather() {
     try {
       await fetchWeatherForCoords(state.locationLat, state.locationLon);
     } catch (e) {
+      console.warn("[pikpika] fetchWeather (saved coords) failed:", e);
       refs.weatherBadge.textContent = "";
     }
     return;
   }
-  // Fall back to IP geolocation (no permission needed, less accurate)
+  // Only use IP fallback if the user has never set a location at all.
+  // Check both the live state AND localStorage directly so a failed
+  // loadState() parse doesn't incorrectly trigger the overwrite.
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    const persisted = raw ? JSON.parse(raw) : null;
+    if (persisted?.locationLat != null) {
+      // loadState() must have failed — restore coords from raw parse
+      state.locationLat = persisted.locationLat;
+      state.locationLon = persisted.locationLon;
+      state.locationName = persisted.locationName ?? null;
+      updateLocationLabel();
+      await fetchWeatherForCoords(state.locationLat, state.locationLon);
+      return;
+    }
+  } catch (e) {
+    console.warn("[pikpika] initWeather raw-parse fallback failed:", e);
+  }
+  // No location ever set — fall back to IP geolocation
   try {
     const geo = await fetch("https://ipapi.co/json/").then((r) => r.json());
     const { latitude: lat, longitude: lon, city } = geo;
@@ -706,6 +729,7 @@ async function initWeather() {
     updateLocationLabel();
     await fetchWeatherForCoords(lat, lon);
   } catch (e) {
+    console.warn("[pikpika] IP geolocation fallback failed:", e);
     refs.weatherBadge.textContent = "";
   }
 }

@@ -2446,22 +2446,11 @@ h1 {
     transform: translateX(-50%) rotate(-3deg) translateY(1px);
   }
 }
-@keyframes sniff-nose {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  25%,
-  60% {
-    transform: scale(1.18);
-  }
-}
+
 .pet.idle-sniff .head {
   animation: sniff-head 1.25s cubic-bezier(0.45, 0, 0.55, 1) forwards;
 }
-.pet.idle-sniff .nose {
-  animation: sniff-nose 1.25s cubic-bezier(0.45, 0, 0.55, 1) forwards;
-}
+/* nose scale animation removed */
 
 /* — WAKE-UP STRETCH — arms spread wide, body tall, big yawn then settle */
 @keyframes wakeup-body {
@@ -2617,23 +2606,39 @@ h1 {
 /* ── IDLE BREATHING — always-on, runs on .body independent of all other anims ── */
 
 @keyframes breathe-body {
-  0%, 100% {
-    transform: scaleX(1)    scaleY(1)    translateY(0);
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1) translateY(0);
   }
   40% {
-    transform: scaleX(1.025) scaleY(1.03)  translateY(-1px);
+    transform: scaleX(1.025) scaleY(1.03) translateY(-1px);
   }
   60% {
-    transform: scaleX(1.02)  scaleY(1.025) translateY(-1px);
+    transform: scaleX(1.02) scaleY(1.025) translateY(-1px);
   }
 }
 
 @keyframes breathe-head {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(-50%) translateY(0);
   }
   45% {
     transform: translateX(-50%) translateY(-2px);
+  }
+}
+
+/* Nostrils flare subtly in sync with inhale — peaks at 40% like breathe-body */
+@keyframes breathe-nose {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  40% {
+    transform: scaleX(1.12) scaleY(0.92);
+  }
+  60% {
+    transform: scaleX(1.08) scaleY(0.95);
   }
 }
 
@@ -2650,20 +2655,50 @@ h1 {
   animation: breathe-head 3.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
+/* .nose becomes a flex row so the two nostril children sit side-by-side;
+   it keeps its position/size from the monkey character CSS unchanged */
+.nose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Each nostril inherits the original nose visual — small dark oval */
+.nostril {
+  display: inline-block;
+  width: 5px;
+  height: 4px;
+  background: #3a1a0a;
+  border-radius: 50%;
+  transform-origin: center center;
+  animation: breathe-nose 3.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+
 /* Pause breathing while an action or idle anim is running on those parts —
    the more-specific selector wins and the override is `animation: none` */
 .pet[class*="action-"] .body,
-.pet[class*="idle-"]   .body {
+.pet[class*="idle-"] .body {
   animation: none;
 }
 .pet[class*="action-"] .head,
-.pet.idle-look         .head,
-.pet.idle-scratch      .head,
-.pet.idle-yawn         .head,
-.pet.idle-doze         .head,
-.pet.idle-groom        .head,
-.pet.idle-sniff        .head,
-.pet.action-wakeup     .head {
+.pet.idle-look .head,
+.pet.idle-scratch .head,
+.pet.idle-yawn .head,
+.pet.idle-doze .head,
+.pet.idle-groom .head,
+.pet.idle-sniff .head,
+.pet.action-wakeup .head {
+  animation: none;
+}
+
+/* Pause nostril breathe when any action or idle anim is running */
+.pet[class*="action-"] .nostril,
+.pet[class*="idle-"] .nostril {
   animation: none;
 }
 
