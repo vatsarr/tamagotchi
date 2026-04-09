@@ -4,12 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Punch Tamagotchi</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&amp;display=swap"
-      rel="stylesheet"
-    />
+    <!-- No external font needed — SF Pro system font stack -->
     <link rel="stylesheet" href="style.css" />
     <style type="text/css"></style>
     <script
@@ -111,7 +106,7 @@
   </head>
   <body>
     <main class="app-shell">
-      <header class="topbar">
+      <header class="topbar glass">
         <div>
           <p class="eyebrow">Pocket companion</p>
           <h1>Punch Tamagotchi</h1>
@@ -121,7 +116,7 @@
         </button>
       </header>
 
-      <section class="pet-card">
+      <section class="pet-card glass">
         <div class="sky">
           <div class="sky-orb sky-sun"></div>
           <div class="sky-orb sky-moon"></div>
@@ -196,14 +191,9 @@
         <button data-action="clean">Clean</button>
       </section>
 
-      <section class="dialog-card">
-        <p id="message">
-          Punch is sitting quietly, hugging the stuffed orangutan.
-        </p>
-        <p class="hint">
-          Tip: your pet slowly gets hungrier and sleepier over time while this
-          page stays open.
-        </p>
+      <section class="dialog-card glass">
+        <p id="message">Punch is sitting quietly, hugging the stuffed orangutan.</p>
+        <p class="hint">Tip: your pet slowly gets hungrier and sleepier over time while this page stays open.</p>
       </section>
     </main>
     <script src="app.js"></script>

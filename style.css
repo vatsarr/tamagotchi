@@ -1,94 +1,197 @@
-/* Art direction: cozy Japanese snow monkey toy — warm, soft, round like Punch */
+/*
+  Art direction: iOS 26 Liquid Glass — frosted translucent panels,
+  specular rim highlights, fluid pill shapes, SF Pro system typography,
+  warm ambient gradient backdrop the glass can refract.
+  Monkey character CSS is untouched.
+*/
+
+/* ── DESIGN TOKENS ─────────────────────────────────────────────── */
+
 :root {
-  --bg: #f2ede8;
-  --surface: #faf7f4;
-  --surface-2: #ede5dc;
-  --text: #3a2e28;
-  --muted: #7d6a60;
-  --accent: #c0524a;
-  --accent-2: #7aaa5a;
-  --meter-bg: #e2d4c8;
-  --shadow: 0 14px 30px rgba(80, 50, 40, 0.16);
+  /* Ambient backdrop — warm peach/lilac, gives glass something to refract */
+  --backdrop-light: linear-gradient(145deg, #fde8d8 0%, #e8d8f5 40%, #d0e8f8 100%);
+  --backdrop-dark:  linear-gradient(145deg, #1a0f1f 0%, #0d1a2e 55%, #1a1008 100%);
+
+  /* Glass surfaces */
+  --glass-bg:          rgba(255, 255, 255, 0.52);
+  --glass-bg-heavy:    rgba(255, 255, 255, 0.72);
+  --glass-border:      rgba(255, 255, 255, 0.70);
+  --glass-border-dim:  rgba(255, 255, 255, 0.30);
+  --glass-shadow:      0 8px 32px rgba(80, 40, 120, 0.12), 0 2px 8px rgba(0,0,0,0.08);
+  --glass-shadow-lg:   0 20px 60px rgba(80, 40, 120, 0.18), 0 4px 16px rgba(0,0,0,0.10);
+  --glass-blur:        blur(24px) saturate(1.6);
+  --glass-blur-light:  blur(16px) saturate(1.4);
+
+  /* Specular highlight — bright top edge like light catching glass */
+  --glass-specular: inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(255,255,255,0.15);
+
+  /* Text */
+  --text:           #1c1c1e;
+  --text-secondary: rgba(28, 28, 30, 0.60);
+  --text-tertiary:  rgba(28, 28, 30, 0.36);
+  --text-on-glass:  rgba(28, 28, 30, 0.88);
+
+  /* Accent — iOS blue */
+  --accent:    #007aff;
+  --accent-2:  #34c759;
+  --accent-3:  #ff9500;
+  --accent-err: #ff3b30;
+
+  /* Meter */
+  --meter-bg:  rgba(0, 0, 0, 0.08);
+
+  /* Radius */
+  --r-sm:   10px;
+  --r-md:   16px;
+  --r-lg:   22px;
+  --r-xl:   30px;
+  --r-pill: 999px;
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 160ms;
+  --t-mid:  280ms;
+  --t-slow: 500ms;
 }
 
 [data-theme="dark"] {
-  --bg: #1e1a17;
-  --surface: #28221f;
-  --surface-2: #352b26;
-  --text: #f2e8e0;
-  --muted: #ccb8aa;
-  --accent: #e87060;
-  --accent-2: #92c472;
-  --meter-bg: #4d3f38;
-  --shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+  --glass-bg:         rgba(28, 28, 30, 0.55);
+  --glass-bg-heavy:   rgba(36, 36, 40, 0.80);
+  --glass-border:     rgba(255, 255, 255, 0.14);
+  --glass-border-dim: rgba(255, 255, 255, 0.07);
+  --glass-shadow:     0 8px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0,0,0,0.25);
+  --glass-shadow-lg:  0 20px 60px rgba(0, 0, 0, 0.50), 0 4px 16px rgba(0,0,0,0.30);
+  --glass-specular:   inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.04);
+
+  --text:           #f2f2f7;
+  --text-secondary: rgba(242, 242, 247, 0.60);
+  --text-tertiary:  rgba(242, 242, 247, 0.30);
+  --text-on-glass:  rgba(242, 242, 247, 0.90);
+
+  --accent:     #0a84ff;
+  --accent-2:   #30d158;
+  --accent-3:   #ff9f0a;
+  --accent-err: #ff453a;
+
+  --meter-bg: rgba(255, 255, 255, 0.10);
 }
 
-* {
-  box-sizing: border-box;
+
+/* ── BASE ───────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
+
 body {
-  margin: 0;
   min-height: 100vh;
-  font-family: "Nunito", sans-serif;
-  background: radial-gradient(circle at top, #fff5ef 0%, var(--bg) 60%);
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
   color: var(--text);
+  background: var(--backdrop-light);
+  /* Subtle animated shimmer in the backdrop */
+  background-attachment: fixed;
+  transition: background var(--t-slow) var(--ease-out);
 }
+[data-theme="dark"] body {
+  background: var(--backdrop-dark);
+}
+
+/* ── GLASS MIXIN (applied to cards) ────────────────────────────── */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+  transition:
+    background var(--t-mid) var(--ease-out),
+    box-shadow var(--t-mid) var(--ease-out),
+    border-color var(--t-mid) var(--ease-out);
+}
+
+.glass-heavy {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-lg), var(--glass-specular);
+}
+
+
+/* ── APP SHELL ──────────────────────────────────────────────────── */
 
 .app-shell {
-  width: min(100%, 760px);
+  width: min(100%, 480px);
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 16px 14px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.topbar,
-.pet-card,
-.dialog-card {
-  background: var(--surface);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
-}
+
+/* ── TOP BAR ────────────────────────────────────────────────────── */
 
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 20px;
-  margin-bottom: 18px;
+  padding: 14px 18px;
+  border-radius: var(--r-xl);
 }
 
 .eyebrow {
-  margin: 0 0 4px;
-  color: var(--muted);
-  font-size: 0.85rem;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
 }
+
 h1 {
-  margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-size: clamp(1.35rem, 4vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-on-glass);
+  line-height: 1.15;
 }
-.icon-button,
-.controls button,
-#renameBtn {
-  border: 0;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 800;
-  cursor: pointer;
-}
+
 .icon-button {
-  width: 44px;
-  height: 44px;
-  font-size: 1.1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  background: rgba(120, 120, 128, 0.14);
+  border: 1px solid var(--glass-border-dim);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-spring);
 }
+.icon-button:hover  { background: rgba(120,120,128,0.22); }
+.icon-button:active { transform: scale(0.92); }
+
+
+/* ── PET CARD ───────────────────────────────────────────────────── */
 
 .pet-card {
   overflow: hidden;
-  margin-bottom: 18px;
+  border-radius: var(--r-xl);
 }
+
+/* Sky viewport */
 .sky {
-  height: 84px;
+  height: 88px;
   background: linear-gradient(180deg, #b8daf5 0%, #f5ede4 100%);
   transition: background 2s ease;
   position: relative;
@@ -98,21 +201,14 @@ h1 {
 /* Sun and moon */
 .sky-orb {
   position: absolute;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  top: 16px;
+  top: 18px;
   transition: left 2s ease, opacity 2s ease, background 2s ease, box-shadow 2s ease;
 }
-.sky-sun {
-  background: #ffd553;
-  box-shadow: 0 0 18px 6px #ffdd7788;
-}
-.sky-moon {
-  background: #d8d8f0;
-  box-shadow: 0 0 14px 4px #a0a0cc66;
-  opacity: 0;
-}
+.sky-sun  { background: #ffd553; box-shadow: 0 0 18px 6px #ffdd7788; }
+.sky-moon { background: #d8d8f0; box-shadow: 0 0 14px 4px #a0a0cc66; opacity: 0; }
 
 /* Stars */
 .sky-stars {
@@ -130,59 +226,49 @@ h1 {
   border-radius: 50%;
 }
 
-/* Time-of-day sky themes */
-[data-time="dawn"] .sky {
-  background: linear-gradient(180deg, #f4a261 0%, #f5cba0 100%);
+/* Time badges — glass pill overlaid on sky */
+.time-badge, .weather-badge {
+  position: absolute;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.50);
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  pointer-events: none;
+  z-index: 10;
 }
-[data-time="morning"] .sky {
-  background: linear-gradient(180deg, #87ceeb 0%, #f5ede4 100%);
-}
-[data-time="day"] .sky {
-  background: linear-gradient(180deg, #4db8f5 0%, #b8daf5 100%);
-}
-[data-time="afternoon"] .sky {
-  background: linear-gradient(180deg, #6ec6f5 0%, #f5ede4 100%);
-}
-[data-time="dusk"] .sky {
-  background: linear-gradient(180deg, #e06030 0%, #f09050 100%);
-}
-[data-time="evening"] .sky {
-  background: linear-gradient(180deg, #1a1a3a 0%, #3a2a50 100%);
-}
-[data-time="night"] .sky {
-  background: linear-gradient(180deg, #0a0a1e 0%, #1a1030 100%);
-}
-[data-time="latenight"] .sky {
-  background: linear-gradient(180deg, #05050f 0%, #100820 100%);
-}
+.time-badge    { top: 8px; left: 12px; text-transform: uppercase; letter-spacing: 0.07em; }
+.weather-badge { bottom: 8px; right: 12px; }
 
-/* Show stars at night */
+/* Time-of-day sky themes */
+[data-time="dawn"]      .sky { background: linear-gradient(180deg, #f4a261 0%, #f5cba0 100%); }
+[data-time="morning"]   .sky { background: linear-gradient(180deg, #87ceeb 0%, #f5ede4 100%); }
+[data-time="day"]       .sky { background: linear-gradient(180deg, #4db8f5 0%, #b8daf5 100%); }
+[data-time="afternoon"] .sky { background: linear-gradient(180deg, #6ec6f5 0%, #f5ede4 100%); }
+[data-time="dusk"]      .sky { background: linear-gradient(180deg, #e06030 0%, #f09050 100%); }
+[data-time="evening"]   .sky { background: linear-gradient(180deg, #1a1a3a 0%, #3a2a50 100%); }
+[data-time="night"]     .sky { background: linear-gradient(180deg, #0a0a1e 0%, #1a1030 100%); }
+[data-time="latenight"] .sky { background: linear-gradient(180deg, #05050f 0%, #100820 100%); }
+
 [data-time="evening"] .sky-stars,
 [data-time="night"] .sky-stars,
-[data-time="latenight"] .sky-stars {
-  opacity: 1;
-}
+[data-time="latenight"] .sky-stars { opacity: 1; }
 
-/* Moon visible at night */
 [data-time="evening"] .sky-moon,
 [data-time="night"] .sky-moon,
-[data-time="latenight"] .sky-moon {
-  opacity: 1;
-}
+[data-time="latenight"] .sky-moon { opacity: 1; }
+
 [data-time="evening"] .sky-sun,
 [data-time="night"] .sky-sun,
-[data-time="latenight"] .sky-sun {
-  opacity: 0;
-}
+[data-time="latenight"] .sky-sun { opacity: 0; }
 
-/* Night mode: dim the whole app slightly */
-[data-time="night"] body,
-[data-time="latenight"] body {
-  filter: brightness(0.92);
-}
-
-/* ── WEATHER EFFECTS ── */
-
+/* Weather layer */
 .weather-layer {
   position: absolute;
   inset: 0;
@@ -191,7 +277,230 @@ h1 {
   z-index: 2;
 }
 
-/* Rain drops */
+/* Pet stage — frosted glass panel */
+.pet-stage {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  padding: 16px 12px 0;
+  position: relative;
+}
+
+/* Status panel — solid-ish glass */
+.status-panel {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border-dim);
+  padding: 16px 18px 18px;
+}
+
+/* Name row */
+.name-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#petName {
+  flex: 1;
+  background: rgba(120,120,128,0.10);
+  border: 1px solid var(--glass-border-dim);
+  border-radius: var(--r-pill);
+  padding: 7px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-on-glass);
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+#petName:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+}
+
+#renameBtn {
+  padding: 7px 16px;
+  border-radius: var(--r-pill);
+  background: rgba(0, 122, 255, 0.14);
+  border: 1px solid rgba(0, 122, 255, 0.25);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background var(--t-fast), transform var(--t-fast) var(--ease-spring);
+}
+#renameBtn:hover  { background: rgba(0,122,255,0.22); }
+#renameBtn:active { transform: scale(0.94); }
+
+/* Mood line */
+.mood-line {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.mood-line strong {
+  color: var(--text-on-glass);
+  font-weight: 600;
+}
+
+/* Stat bars */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat span {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+.meter {
+  height: 6px;
+  background: var(--meter-bg);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  transition: width 0.6s var(--ease-out);
+  transform-origin: left;
+}
+.meter i.warning  { background: linear-gradient(90deg, var(--accent-3), #ff6b00); }
+.meter i.critical { background: linear-gradient(90deg, var(--accent-err), #c0000a); }
+
+.stat.zero span { color: var(--accent-err); animation: label-pulse 1s ease-in-out infinite; }
+
+
+/* ── CONTROLS ───────────────────────────────────────────────────── */
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.controls button {
+  position: relative;
+  overflow: hidden;
+  min-height: 60px;
+  border-radius: var(--r-lg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+  color: var(--text-on-glass);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    transform var(--t-fast) var(--ease-spring),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+.controls button:hover {
+  background: var(--glass-bg-heavy);
+  box-shadow: var(--glass-shadow-lg), var(--glass-specular);
+}
+.controls button:active {
+  transform: scale(0.94);
+  background: rgba(0, 122, 255, 0.12);
+}
+
+/* Button emoji icons */
+.controls button::before {
+  font-size: 22px;
+  line-height: 1;
+}
+[data-action="feed"]::before  { content: "🍌"; }
+[data-action="play"]::before  { content: "🌿"; }
+[data-action="sleep"]::before { content: "💤"; }
+[data-action="clean"]::before { content: "🛁"; }
+
+.btn-label { font-size: 12px; font-weight: 600; }
+
+
+/* ── DIALOG / MESSAGE CARD ─────────────────────────────────────── */
+
+.dialog-card {
+  border-radius: var(--r-xl);
+  padding: 16px 18px;
+}
+
+.dialog-card #message {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text-on-glass);
+  font-weight: 400;
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+
+/* ── FLASH OVERLAYS ─────────────────────────────────────────────── */
+
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  animation: flash-in 0.75s ease forwards;
+}
+@keyframes flash-in {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.flash-overlay.hunger { background: rgba(255, 100, 0, 0.18); }
+.flash-overlay.energy { background: rgba(100, 100, 255, 0.18); }
+.flash-overlay.joy    { background: rgba(255, 50, 120, 0.18); }
+.flash-overlay.clean  { background: rgba(100, 200, 100, 0.14); }
+
+
+/* ── CRISIS PULSE ───────────────────────────────────────────────── */
+
+@keyframes crisis-pulse {
+  0%, 100% { box-shadow: var(--glass-shadow); }
+  50%       { box-shadow: 0 0 0 4px rgba(255,59,48,0.25), var(--glass-shadow); }
+}
+.pet-stage.in-crisis { animation: crisis-pulse 1.2s ease-in-out infinite; }
+
+@keyframes label-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+
+/* ── RAIN / SNOW / CLOUD PARTICLES ─────────────────────────────── */
+
 .raindrop {
   position: absolute;
   top: -10px;
@@ -200,11 +509,8 @@ h1 {
   background: linear-gradient(180deg, rgba(180,210,255,0) 0%, rgba(160,200,255,0.7) 100%);
   animation: rain-fall linear infinite;
 }
-@keyframes rain-fall {
-  to { transform: translateY(110px); opacity: 0; }
-}
+@keyframes rain-fall { to { transform: translateY(110px); opacity: 0; } }
 
-/* Snow flakes */
 .snowflake {
   position: absolute;
   top: -8px;
@@ -212,14 +518,11 @@ h1 {
   background: rgba(255,255,255,0.9);
   animation: snow-fall linear infinite;
 }
-@keyframes snow-fall {
-  to { transform: translateY(110px) translateX(var(--drift)); opacity: 0.2; }
-}
+@keyframes snow-fall { to { transform: translateY(110px) translateX(var(--drift)); opacity: 0.2; } }
 
-/* Clouds */
 .cloud {
   position: absolute;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.40);
   border-radius: 50px;
   animation: cloud-drift linear infinite;
 }
@@ -229,24 +532,13 @@ h1 {
   background: inherit;
   border-radius: 50%;
 }
-.cloud::before {
-  width: 55%;
-  height: 150%;
-  top: -40%;
-  left: 12%;
-}
-.cloud::after {
-  width: 40%;
-  height: 130%;
-  top: -25%;
-  right: 12%;
-}
+.cloud::before { width: 55%; height: 150%; top: -40%; left: 12%; }
+.cloud::after  { width: 40%; height: 130%; top: -25%; right: 12%; }
 @keyframes cloud-drift {
   from { transform: translateX(-120px); }
   to   { transform: translateX(calc(100vw + 120px)); }
 }
 
-/* Lightning flash */
 .lightning-flash {
   position: fixed;
   inset: 0;
@@ -264,58 +556,20 @@ h1 {
   100% { opacity: 0; }
 }
 
-/* Fog overlay */
 .fog-layer {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(200,210,220,0.45) 0%, rgba(200,210,220,0.1) 100%);
   pointer-events: none;
   z-index: 3;
-  animation: fog-drift 8s ease-in-out infinite alternate;
+  animation: fog-anim 8s ease-in-out infinite alternate;
 }
-@keyframes fog-drift {
-  from { opacity: 0.5; }
-  to   { opacity: 0.8; }
-}
+@keyframes fog-anim { from { opacity: 0.5; } to { opacity: 0.8; } }
 
-/* Weather badge */
-.weather-badge {
-  position: absolute;
-  bottom: 8px;
-  right: 14px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: rgba(255,255,255,0.9);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  pointer-events: none;
-  z-index: 10;
-}
 
-/* Time badge */
-.time-badge {
-  position: absolute;
-  top: 8px;
-  right: 14px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.85);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  pointer-events: none;
-}
-.pet-stage {
-  position: relative;
-  padding: 12px 12px 0;
-  background:
-    radial-gradient(
-      circle at 50% 30%,
-      rgba(255, 255, 255, 0.65),
-      transparent 40%
-    ),
-    linear-gradient(180deg, transparent 0%, rgba(180, 140, 110, 0.08) 100%);
-}
+/* ── MONKEY CHARACTER ───────────────────────────────────────────── */
+/* (Layout & proportions only — colours are intrinsic to the character) */
+
 .pet {
   position: relative;
   width: 220px;
@@ -324,490 +578,193 @@ h1 {
   transform-origin: center bottom;
   transition: transform 180ms ease;
 }
-.pet.bounce {
-  transform: translateY(-6px) scale(1.02);
-}
+.pet.bounce { transform: translateY(-6px) scale(1.02); }
 
-/* All parts absolutely positioned */
-.ear,
-.body,
-.arm,
-.foot,
-.belly,
-.cheek,
-.nose,
-.eye,
-.mouth,
-.face,
-.head,
-.tail {
+.ear, .body, .arm, .foot, .belly, .cheek,
+.nose, .eye, .mouth, .face, .head, .tail {
   position: absolute;
 }
 
-/* ── BODY (grey-brown, oval) ── */
+/* Body */
 .body {
-  left: 38px;
-  right: 38px;
-  top: 90px;
-  bottom: 20px;
+  left: 38px; right: 38px; top: 90px; bottom: 20px;
   background: #a08070;
   border-radius: 46% 46% 44% 44%;
 }
-
-/* Lighter belly patch */
 .belly {
-  left: 38px;
-  right: 38px;
-  bottom: 14px;
-  height: 68px;
+  left: 38px; right: 38px; bottom: 14px; height: 68px;
   background: #d4bfb0;
   border-radius: 48% 48% 44% 44%;
 }
 
-/* ── HEAD (large, round, sits on body) ── */
+/* Head */
 .head {
-  width: 126px;
-  height: 120px;
-  top: 4px;
-  left: 50%;
+  width: 126px; height: 120px;
+  top: 4px; left: 50%;
   transform: translateX(-50%);
   background: #a08070;
-  border-radius: 50%;
-  z-index: 2;
+  border-radius: 50% 50% 46% 46%;
 }
 
-/* Inner face disc — pale cream/pink for the macaque face */
-.face {
-  width: 96px;
-  height: 90px;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #e8cfc0;
-  border-radius: 50%;
-  z-index: 1;
-}
-
-/* ── EARS (small, round, on sides of head) ── */
+/* Ears */
 .ear {
-  width: 34px;
-  height: 34px;
-  top: 18px;
+  width: 34px; height: 30px;
+  top: 28px;
   background: #a08070;
   border-radius: 50%;
-  z-index: 1;
+  z-index: 0;
 }
+.ear-left  { left: -10px; }
+.ear-right { right: -10px; }
 .ear::after {
   content: "";
   position: absolute;
-  inset: 7px;
-  background: #d4a090;
+  width: 20px; height: 16px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #e8a090;
   border-radius: 50%;
 }
-.ear-left {
-  left: 2px;
-}
-.ear-right {
-  right: 2px;
+
+/* Face disc */
+.face {
+  width: 92px; height: 86px;
+  top: 18px; left: 50%;
+  transform: translateX(-50%);
+  background: #d4bfb0;
+  border-radius: 48% 48% 44% 44%;
+  z-index: 1;
 }
 
-/* ── EYES (dark, expressive) ── */
+/* Eyes */
 .eye {
-  width: 13px;
-  height: 16px;
-  top: 34px;
-  background: #1e1510;
+  width: 16px; height: 18px;
+  top: 22px;
+  background: #2a1a10;
   border-radius: 50%;
   z-index: 2;
 }
 .eye::after {
   content: "";
   position: absolute;
-  width: 4px;
-  height: 4px;
-  top: 3px;
-  left: 3px;
-  background: rgba(255, 255, 255, 0.7);
+  width: 5px; height: 5px;
+  top: 3px; right: 2px;
+  background: rgba(255,255,255,0.75);
   border-radius: 50%;
 }
-.eye-left {
-  left: 20px;
-}
-.eye-right {
-  right: 20px;
-}
+.eye-left  { left: 14px; }
+.eye-right { right: 14px; }
 
-/* ── NOSE (flat, broad, pinkish-red — macaque style) ── */
+/* Nose */
 .nose {
-  width: 22px;
-  height: 14px;
-  top: 52px;
-  left: 50%;
+  width: 28px; height: 14px;
+  top: 42px; left: 50%;
   transform: translateX(-50%);
-  background: #c06050;
-  border-radius: 50%;
+  background: #c06858;
+  border-radius: 50% 50% 48% 48%;
   z-index: 2;
 }
+.nose::before, .nose::after {
+  content: "";
+  position: absolute;
+  width: 8px; height: 7px;
+  top: 3px;
+  background: rgba(0,0,0,0.22);
+  border-radius: 50%;
+}
+.nose::before { left: 4px; }
+.nose::after  { right: 4px; }
 
-/* ── MOUTH ── */
+/* Mouth */
 .mouth {
-  width: 22px;
-  height: 10px;
-  top: 67px;
-  left: 50%;
+  width: 22px; height: 8px;
+  top: 58px; left: 50%;
   transform: translateX(-50%);
-  border-bottom: 2.5px solid #7a4030;
-  border-radius: 0 0 18px 18px;
+  border-bottom: 2.5px solid rgba(120,60,40,0.55);
+  border-radius: 0 0 50% 50%;
   z-index: 2;
 }
 
-/* ── CHEEKS (rosy pink circles) ── */
+/* Cheeks */
 .cheek {
-  width: 20px;
-  height: 14px;
-  top: 56px;
-  background: #e0806a;
-  opacity: 0.55;
+  width: 18px; height: 10px;
+  top: 50px;
+  background: rgba(220,100,80,0.28);
   border-radius: 50%;
   z-index: 2;
 }
-.cheek-left {
-  left: 6px;
-}
-.cheek-right {
-  right: 6px;
-}
+.cheek-left  { left: 6px; }
+.cheek-right { right: 6px; }
 
-/* ── ARMS (stubby, round at end) ── */
+/* Arms */
 .arm {
-  width: 30px;
-  height: 70px;
-  top: 108px;
+  width: 28px; height: 68px;
+  top: 100px;
   background: #a08070;
-  border-radius: 30px;
-  z-index: 1;
+  border-radius: 14px;
+  transition: transform 0.4s ease;
 }
-.arm-left {
-  left: 20px;
-  transform: rotate(14deg);
-}
-.arm-right {
-  right: 20px;
-  transform: rotate(-14deg);
-}
+.arm-left  { left: 16px;  transform: rotate(12deg);  transform-origin: top center; }
+.arm-right { right: 16px; transform: rotate(-12deg); transform-origin: top center; }
 
-/* ── FEET (wide, round) ── */
+/* Feet */
 .foot {
-  width: 46px;
-  height: 22px;
-  bottom: 10px;
-  background: #88655a;
-  border-radius: 22px;
-  z-index: 1;
+  width: 36px; height: 18px;
+  bottom: 4px;
+  background: #8a6e60;
+  border-radius: 50% 50% 48% 48%;
 }
-.foot-left {
-  left: 46px;
-}
-.foot-right {
-  right: 46px;
-}
+.foot-left  { left: 42px;  }
+.foot-right { right: 42px; }
 
-/* ── TAIL (small, curled upward) ── */
+/* Tail */
 .tail {
-  width: 24px;
-  height: 36px;
-  bottom: 28px;
-  right: 24px;
-  border: 5px solid #88655a;
-  border-radius: 50% 50% 50% 0;
-  border-left-color: transparent;
-  border-bottom-color: transparent;
-  transform: rotate(-30deg);
+  width: 18px; height: 50px;
+  bottom: 14px; right: 24px;
+  background: #a08070;
+  border-radius: 0 40% 40% 0;
+  transform: rotate(-20deg);
+  transform-origin: top center;
   z-index: 0;
 }
 
-.status-panel {
-  padding: 18px;
-}
-.name-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-#petName {
-  flex: 1;
-  border: 2px solid transparent;
-  border-radius: 999px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 700;
-}
-#petName:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-#renameBtn {
-  padding: 12px 16px;
-}
-.mood-line,
-.hint {
-  color: var(--muted);
-}
-.bars {
-  display: grid;
-  gap: 12px;
-  margin-top: 14px;
-}
-.stat {
-  display: grid;
-  grid-template-columns: 92px 1fr;
-  align-items: center;
-  gap: 12px;
-}
-.stat span {
-  font-weight: 700;
-}
-.meter {
-  height: 14px;
-  background: var(--meter-bg);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.meter i {
-  display: block;
-  height: 100%;
-  width: 50%;
-  background: linear-gradient(90deg, var(--accent-2), var(--accent));
-  border-radius: inherit;
-  transition:
-    width 0.25s ease,
-    background 0.4s ease;
-}
-.meter i.critical {
-  background: linear-gradient(90deg, #e05030, #c0201a);
-}
-.meter i.warning {
-  background: linear-gradient(90deg, #e08830, #c05010);
-}
-.controls {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.controls button {
-  padding: 14px 10px;
-  box-shadow: var(--shadow);
-  font-size: 1rem;
-}
-.controls button:active {
-  transform: translateY(1px);
-}
-.dialog-card {
-  padding: 18px;
-}
-#message {
-  margin: 0 0 10px;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-.hint {
-  margin: 0;
-  font-size: 0.92rem;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* ── DRAMATIC ZERO STATE EFFECTS ── */
-
-/* Flash overlay for when a stat hits zero */
-.flash-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 999;
-  opacity: 0;
-  animation: flash-in-out 0.7s ease forwards;
-}
-@keyframes flash-in-out {
-  0% {
-    opacity: 0;
-  }
-  20% {
-    opacity: 0.55;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-.flash-overlay.hunger {
-  background: radial-gradient(circle, #c0201a88, #8000001a);
-}
-.flash-overlay.energy {
-  background: radial-gradient(circle, #44448888, #0000441a);
-}
-.flash-overlay.joy {
-  background: radial-gradient(circle, #88448888, #4400441a);
-}
-.flash-overlay.clean {
-  background: radial-gradient(circle, #44882288, #1a3a001a);
-}
-
-/* HUNGER = 0: shake left-right frantically */
-@keyframes hunger-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  15% {
-    transform: translateX(-8px) rotate(-3deg);
-  }
-  30% {
-    transform: translateX(8px) rotate(3deg);
-  }
-  45% {
-    transform: translateX(-6px) rotate(-2deg);
-  }
-  60% {
-    transform: translateX(6px) rotate(2deg);
-  }
-  75% {
-    transform: translateX(-4px);
-  }
-  90% {
-    transform: translateX(4px);
-  }
-}
-.pet.starving {
-  animation: hunger-shake 0.6s ease infinite;
-}
-
-/* ENERGY = 0: droop and sag downward */
-@keyframes energy-droop {
-  0%,
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-  50% {
-    transform: translateY(6px) scaleY(0.95);
-  }
-}
-.pet.exhausted {
-  animation: energy-droop 2s ease-in-out infinite;
-  filter: brightness(0.82) saturate(0.6);
-}
-
-/* JOY = 0: greyscale + slow sad sway */
-@keyframes joy-sway {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-4deg);
-  }
-  75% {
-    transform: rotate(4deg);
-  }
-}
-.pet.sad {
-  animation: joy-sway 3s ease-in-out infinite;
-  filter: grayscale(0.85) brightness(0.88);
-}
-
-/* CLEAN = 0: stink lines appear above head, wobble */
-@keyframes stink-rise {
-  0% {
-    transform: translateY(0) scaleX(1);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(-28px) scaleX(0.6);
-    opacity: 0;
-  }
-}
+/* Stink lines */
 .stink-line {
   position: absolute;
-  width: 4px;
-  height: 18px;
-  border-radius: 4px;
-  background: #7ab840;
-  top: -10px;
-  animation: stink-rise 1.4s ease-in infinite;
-  z-index: 10;
+  width: 2px; height: 18px;
+  background: linear-gradient(180deg, rgba(100,180,60,0.8), transparent);
+  border-radius: 2px;
+  animation: stink-rise 1.4s ease-in-out infinite;
+  pointer-events: none;
 }
-.stink-line:nth-child(1) {
-  left: 70px;
-  animation-delay: 0s;
-  animation-duration: 1.3s;
-}
-.stink-line:nth-child(2) {
-  left: 92px;
-  animation-delay: 0.4s;
-  animation-duration: 1.6s;
-}
-.stink-line:nth-child(3) {
-  left: 114px;
-  animation-delay: 0.2s;
-  animation-duration: 1.4s;
+.stink-line:nth-child(1) { left: 60px;  bottom: 200px; animation-delay: 0s;    }
+.stink-line:nth-child(2) { left: 100px; bottom: 210px; animation-delay: 0.4s;  }
+.stink-line:nth-child(3) { left: 140px; bottom: 205px; animation-delay: 0.8s;  }
+@keyframes stink-rise {
+  0%   { transform: translateY(0) scaleX(1);  opacity: 0.8; }
+  100% { transform: translateY(-28px) scaleX(0.5); opacity: 0; }
 }
 
-/* Multiple crisis: combine effects with extra shake */
-@keyframes crisis-pulse {
-  0%,
-  100% {
-    box-shadow: none;
-  }
-  50% {
-    box-shadow: 0 0 32px 8px rgba(200, 30, 30, 0.25);
-  }
-}
-.pet-stage.in-crisis {
-  animation: crisis-pulse 1.2s ease-in-out infinite;
-  border-radius: 16px;
-}
 
-/* Stat label flashes red when at zero */
-.stat.zero span {
-  color: #c0201a;
-  animation: label-pulse 1s ease-in-out infinite;
-}
-@keyframes label-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
+/* ── CRISIS CLASSES ─────────────────────────────────────────────── */
 
-/* ── WEATHER × MONKEY INTERACTIONS ── */
+.pet.starving  { filter: contrast(1.1) brightness(0.85); }
+.pet.exhausted { filter: brightness(0.8) saturate(0.6); }
+.pet.sad       { filter: saturate(0.5) brightness(0.88); }
+.pet.stinky    { filter: hue-rotate(20deg) saturate(0.7); }
 
-/* RAIN / DRIZZLE: hunch forward, arms wrap around body */
+
+/* ── WEATHER × MONKEY INTERACTIONS ─────────────────────────────── */
+
 @keyframes rain-huddle {
   0%, 100% { transform: rotate(-4deg) translateY(0px); }
   50%       { transform: rotate(-5deg) translateY(2px); }
 }
-.pet.weather-rain {
-  animation: rain-huddle 2.4s ease-in-out infinite;
-  filter: saturate(0.7) brightness(0.88);
-}
+.pet.weather-rain { animation: rain-huddle 2.4s ease-in-out infinite; filter: saturate(0.7) brightness(0.88); }
 .pet.weather-rain .arm-left  { transform: rotate(35deg) translateY(-6px); }
 .pet.weather-rain .arm-right { transform: rotate(-35deg) translateY(-6px); }
 .pet.weather-rain .head      { transform: translateX(-50%) translateY(4px); }
 
-/* SNOW: shiver rapidly, slight blue tint */
 @keyframes snow-shiver {
   0%   { transform: translateX(0) rotate(0deg); }
   20%  { transform: translateX(-3px) rotate(-1.5deg); }
@@ -816,16 +773,9 @@ h1 {
   80%  { transform: translateX(2px) rotate(1deg); }
   100% { transform: translateX(0) rotate(0deg); }
 }
-.pet.weather-snow {
-  animation: snow-shiver 0.35s linear infinite;
-  filter: saturate(0.5) brightness(0.9) hue-rotate(20deg);
-}
-.pet.weather-snow .foot-left,
-.pet.weather-snow .foot-right {
-  background: #a0b8c8;
-}
+.pet.weather-snow { animation: snow-shiver 0.35s linear infinite; filter: saturate(0.5) brightness(0.9) hue-rotate(20deg); }
+.pet.weather-snow .foot-left, .pet.weather-snow .foot-right { background: #a0b8c8; }
 
-/* STORM: frantic shake + red-orange flash tint, arms raised */
 @keyframes storm-panic {
   0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
   15%       { transform: translateX(-6px) translateY(-3px) rotate(-3deg); }
@@ -834,39 +784,27 @@ h1 {
   60%       { transform: translateX(5px) translateY(-2px) rotate(2deg); }
   80%       { transform: translateX(-3px) rotate(-1deg); }
 }
-.pet.weather-storm {
-  animation: storm-panic 0.45s ease-in-out infinite;
-  filter: contrast(1.1) brightness(0.85);
-}
+.pet.weather-storm { animation: storm-panic 0.45s ease-in-out infinite; filter: contrast(1.1) brightness(0.85); }
 .pet.weather-storm .arm-left  { transform: rotate(-50deg) translateY(-14px); }
 .pet.weather-storm .arm-right { transform: rotate(50deg) translateY(-14px); }
 
-/* CLEAR (sunny): happy idle bounce, warm glow */
 @keyframes sunny-sway {
   0%, 100% { transform: rotate(0deg) translateY(0); }
   30%       { transform: rotate(2deg) translateY(-3px); }
   70%       { transform: rotate(-2deg) translateY(-1px); }
 }
-.pet.weather-clear {
-  animation: sunny-sway 3s ease-in-out infinite;
-  filter: brightness(1.08) saturate(1.15);
-}
+.pet.weather-clear { animation: sunny-sway 3s ease-in-out infinite; filter: brightness(1.08) saturate(1.15); }
 
-/* FOG: slow dreamy drift, desaturated */
 @keyframes fog-drift-pet {
   0%, 100% { transform: translateX(0) translateY(0); opacity: 0.85; }
   50%       { transform: translateX(4px) translateY(-2px); opacity: 0.75; }
 }
-.pet.weather-fog {
-  animation: fog-drift-pet 5s ease-in-out infinite;
-  filter: saturate(0.3) brightness(0.85) blur(0.4px);
-}
+.pet.weather-fog { animation: fog-drift-pet 5s ease-in-out infinite; filter: saturate(0.3) brightness(0.85) blur(0.4px); }
 
-/* Snowflakes on fur: white dots appear on head/body */
+/* Fur particles */
 .snow-dot {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 4px; height: 4px;
   background: rgba(255,255,255,0.9);
   border-radius: 50%;
   pointer-events: none;
@@ -878,87 +816,9 @@ h1 {
   100% { opacity: 0; transform: scale(0); }
 }
 
-/* ── TIME × WEATHER COMBINED STATES ── */
-
-/* Night + rain: curl up, very dim */
-@keyframes night-rain-curl {
-  0%, 100% { transform: rotate(-6deg) translateY(2px) scaleY(0.96); }
-  50%       { transform: rotate(-7deg) translateY(4px) scaleY(0.94); }
-}
-.pet.time-night.weather-rain,
-.pet.time-latenight.weather-rain {
-  animation: night-rain-curl 3s ease-in-out infinite !important;
-  filter: saturate(0.4) brightness(0.72) !important;
-}
-
-/* Night + storm: cower, high contrast dark */
-@keyframes night-storm-cower {
-  0%, 100% { transform: scaleY(0.92) translateY(3px); }
-  20%       { transform: scaleY(0.88) translateY(5px) translateX(-4px); }
-  60%       { transform: scaleY(0.9) translateY(4px) translateX(3px); }
-}
-.pet.time-night.weather-storm,
-.pet.time-latenight.weather-storm {
-  animation: night-storm-cower 0.5s ease-in-out infinite !important;
-  filter: contrast(1.2) brightness(0.65) saturate(0.5) !important;
-}
-
-/* Night + snow: very slow shiver, moonlit blue */
-.pet.time-night.weather-snow,
-.pet.time-latenight.weather-snow {
-  animation: snow-shiver 0.6s linear infinite !important;
-  filter: saturate(0.3) brightness(0.78) hue-rotate(40deg) !important;
-}
-
-/* Dawn + clear: stretching wake-up */
-@keyframes dawn-stretch {
-  0%   { transform: rotate(0deg) scaleY(1); }
-  30%  { transform: rotate(3deg) scaleY(1.03) translateY(-4px); }
-  60%  { transform: rotate(-2deg) scaleY(1.01) translateY(-2px); }
-  100% { transform: rotate(0deg) scaleY(1); }
-}
-.pet.time-dawn.weather-clear {
-  animation: dawn-stretch 5s ease-in-out infinite !important;
-  filter: brightness(1.05) saturate(1.1) sepia(0.12) !important;
-}
-
-/* Dusk + clear: sleepy sway */
-@keyframes dusk-sway {
-  0%, 100% { transform: rotate(0deg); }
-  40%       { transform: rotate(-3deg) translateY(2px); }
-  80%       { transform: rotate(2deg) translateY(1px); }
-}
-.pet.time-dusk.weather-clear,
-.pet.time-evening.weather-clear {
-  animation: dusk-sway 4s ease-in-out infinite !important;
-  filter: brightness(0.95) saturate(1.1) sepia(0.2) !important;
-}
-
-/* Afternoon + clear: playful hop */
-@keyframes sunny-hop {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25%       { transform: translateY(-7px) rotate(2deg); }
-  75%       { transform: translateY(-4px) rotate(-1deg); }
-}
-.pet.time-day.weather-clear,
-.pet.time-afternoon.weather-clear {
-  animation: sunny-hop 2s ease-in-out infinite !important;
-  filter: brightness(1.12) saturate(1.25) !important;
-}
-
-/* Night + fog: ghostly fade drift */
-.pet.time-night.weather-fog,
-.pet.time-evening.weather-fog {
-  animation: fog-drift-pet 7s ease-in-out infinite !important;
-  filter: saturate(0.15) brightness(0.65) blur(0.6px) !important;
-  opacity: 0.8;
-}
-
-/* Raindrops on fur: streaks appear and slide */
 .rain-streak {
   position: absolute;
-  width: 2px;
-  height: 8px;
+  width: 2px; height: 8px;
   background: rgba(160,200,255,0.7);
   border-radius: 2px;
   pointer-events: none;
@@ -969,100 +829,110 @@ h1 {
   100% { opacity: 0;   transform: translateY(12px); }
 }
 
-/* ── DIGESTION COUNTDOWN RING ── */
-
-#feedBtn {
-  position: relative;
-  overflow: hidden;
+/* Combined time × weather states */
+@keyframes night-rain-curl {
+  0%, 100% { transform: rotate(-6deg) translateY(2px) scaleY(0.96); }
+  50%       { transform: rotate(-7deg) translateY(4px) scaleY(0.94); }
 }
+.pet.time-night.weather-rain,
+.pet.time-latenight.weather-rain { animation: night-rain-curl 3s ease-in-out infinite !important; filter: saturate(0.4) brightness(0.72) !important; }
 
-/* Ring sits behind the label */
+@keyframes night-storm-cower {
+  0%, 100% { transform: scaleY(0.92) translateY(3px); }
+  20%       { transform: scaleY(0.88) translateY(5px) translateX(-4px); }
+  60%       { transform: scaleY(0.9) translateY(4px) translateX(3px); }
+}
+.pet.time-night.weather-storm,
+.pet.time-latenight.weather-storm { animation: night-storm-cower 0.5s ease-in-out infinite !important; filter: contrast(1.2) brightness(0.65) saturate(0.5) !important; }
+
+.pet.time-night.weather-snow,
+.pet.time-latenight.weather-snow { animation: snow-shiver 0.6s linear infinite !important; filter: saturate(0.3) brightness(0.78) hue-rotate(40deg) !important; }
+
+@keyframes dawn-stretch {
+  0%   { transform: rotate(0deg) scaleY(1); }
+  30%  { transform: rotate(3deg) scaleY(1.03) translateY(-4px); }
+  60%  { transform: rotate(-2deg) scaleY(1.01) translateY(-2px); }
+  100% { transform: rotate(0deg) scaleY(1); }
+}
+.pet.time-dawn.weather-clear { animation: dawn-stretch 5s ease-in-out infinite !important; filter: brightness(1.05) saturate(1.1) sepia(0.12) !important; }
+
+@keyframes dusk-sway {
+  0%, 100% { transform: rotate(0deg); }
+  40%       { transform: rotate(-3deg) translateY(2px); }
+  80%       { transform: rotate(2deg) translateY(1px); }
+}
+.pet.time-dusk.weather-clear,
+.pet.time-evening.weather-clear { animation: dusk-sway 4s ease-in-out infinite !important; filter: brightness(0.95) saturate(1.1) sepia(0.2) !important; }
+
+@keyframes sunny-hop {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%       { transform: translateY(-7px) rotate(2deg); }
+  75%       { transform: translateY(-4px) rotate(-1deg); }
+}
+.pet.time-day.weather-clear,
+.pet.time-afternoon.weather-clear { animation: sunny-hop 2s ease-in-out infinite !important; filter: brightness(1.12) saturate(1.25) !important; }
+
+.pet.time-night.weather-fog,
+.pet.time-evening.weather-fog { animation: fog-drift-pet 7s ease-in-out infinite !important; filter: saturate(0.15) brightness(0.65) blur(0.6px) !important; opacity: 0.8; }
+
+
+/* ── DIGESTION COUNTDOWN RING ───────────────────────────────────── */
+
+#feedBtn { position: relative; overflow: hidden; }
+
 .digest-ring {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg); /* start at top */
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-#feedBtn.digesting .digest-ring {
-  opacity: 1;
-}
+#feedBtn.digesting .digest-ring { opacity: 1; }
 
-.digest-ring-track {
-  fill: none;
-  stroke: rgba(0,0,0,0.08);
-  stroke-width: 3;
-}
+.digest-ring-track { fill: none; stroke: rgba(0,0,0,0.07); stroke-width: 3; }
 .digest-ring-fill {
   fill: none;
-  stroke: var(--color-primary);
+  stroke: var(--accent);
   stroke-width: 3;
   stroke-linecap: round;
-  /* circumference of r=15.9 circle ≈ 99.9 ≈ 100 */
   stroke-dasharray: 100;
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 1s linear;
 }
 
-/* Dim label while digesting */
-#feedBtn.digesting .btn-label {
-  opacity: 0.45;
-}
+#feedBtn.digesting .btn-label { opacity: 0.45; }
 
-/* Countdown number overlaid on button */
 .digest-countdown {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-xs);
-  font-weight: 800;
-  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-#feedBtn.digesting .digest-countdown {
-  opacity: 1;
-}
+#feedBtn.digesting .digest-countdown { opacity: 1; }
 
-/* Pulse when almost ready */
 @keyframes digest-ready-pulse {
-  0%, 100% { box-shadow: none; }
-  50% { box-shadow: 0 0 0 4px oklch(from var(--color-primary) l c h / 0.25); }
+  0%, 100% { box-shadow: var(--glass-shadow); }
+  50%       { box-shadow: 0 0 0 4px rgba(0,122,255,0.25), var(--glass-shadow); }
 }
-#feedBtn.digest-ready {
-  animation: digest-ready-pulse 0.7s ease-in-out 2;
-}
+#feedBtn.digest-ready { animation: digest-ready-pulse 0.7s ease-in-out 2; }
 
-@media (max-width: 640px) {
-  .controls {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .stat {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-  .pet {
-    width: 190px;
-    height: 200px;
-  }
-  .head {
-    width: 110px;
-    height: 106px;
-  }
-  .face {
-    width: 84px;
-    height: 80px;
-  }
-  .eye-left {
-    left: 16px;
-  }
-  .eye-right {
-    right: 16px;
-  }
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+
+@media (max-width: 400px) {
+  .controls { grid-template-columns: repeat(2, 1fr); }
+  .pet  { width: 190px; height: 200px; }
+  .head { width: 110px; height: 106px; }
+  .face { width: 84px;  height: 80px; }
+  .eye-left  { left: 16px; }
+  .eye-right { right: 16px; }
 }
