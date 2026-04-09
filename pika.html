@@ -122,12 +122,17 @@
       </header>
 
       <section class="pet-card">
-        <div class="sky"></div>
+        <div class="sky">
+          <div class="sky-orb sky-sun"></div>
+          <div class="sky-orb sky-moon"></div>
+          <div class="sky-stars" id="skyStars"></div>
+          <span class="time-badge" id="timeBadge"></span>
+          <div class="weather-layer" id="weatherLayer"></div>
+          <span class="weather-badge" id="weatherBadge"></span>
+        </div>
         <div class="pet-stage">
           <div class="pet" id="pet" aria-label="Punch the monkey">
-            <div class="body">
-              <div class="belly"></div>
-            </div>
+            <div class="body"><div class="belly"></div></div>
             <div class="arm arm-left"></div>
             <div class="arm arm-right"></div>
             <div class="foot foot-left"></div>
@@ -145,6 +150,7 @@
                 <span class="cheek cheek-right"></span>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -156,19 +162,19 @@
           </div>
           <p class="mood-line">Mood: <strong id="moodText">Content</strong></p>
           <div class="bars">
-            <div class="stat">
+            <div class="stat" id="statHunger">
               <span>Hunger</span>
               <div class="meter"><i id="hungerBar"></i></div>
             </div>
-            <div class="stat">
+            <div class="stat" id="statEnergy">
               <span>Energy</span>
               <div class="meter"><i id="energyBar"></i></div>
             </div>
-            <div class="stat">
+            <div class="stat" id="statJoy">
               <span>Joy</span>
               <div class="meter"><i id="joyBar"></i></div>
             </div>
-            <div class="stat">
+            <div class="stat" id="statClean">
               <span>Cleanliness</span>
               <div class="meter"><i id="cleanBar"></i></div>
             </div>
@@ -177,14 +183,23 @@
       </section>
 
       <section class="controls">
-        <button data-action="feed">Feed</button>
+        <button data-action="feed" id="feedBtn">
+          <span class="btn-label">Feed</span>
+          <svg class="digest-ring" viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="digest-ring-track" cx="18" cy="18" r="15.9"/>
+            <circle class="digest-ring-fill" cx="18" cy="18" r="15.9"/>
+          </svg>
+          <span class="digest-countdown" id="digestCountdown"></span>
+        </button>
         <button data-action="play">Play</button>
         <button data-action="sleep">Nap</button>
         <button data-action="clean">Clean</button>
       </section>
 
       <section class="dialog-card">
-        <p id="message">Punch is sitting quietly, hugging the stuffed orangutan.</p>
+        <p id="message">
+          Punch is sitting quietly, hugging the stuffed orangutan.
+        </p>
         <p class="hint">
           Tip: your pet slowly gets hungrier and sleepier over time while this
           page stays open.
