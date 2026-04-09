@@ -26,6 +26,7 @@ import {
 } from "./simulation.js";
 import {
   initAnimations,
+  applyAnimSettings,
   triggerAnim,
   lockIdleForDuration,
   spawnStars,
@@ -757,6 +758,7 @@ refs.renameBtn.addEventListener("click", () => {
     return;
   }
   state.name = next;
+  saveState();
   setMessage(`${state.name} blinks curiously. Name updated.`);
   render();
   closeSettings();
@@ -769,19 +771,25 @@ refs.themeToggle.addEventListener("click", () => {
     state.theme === "dark" ? "true" : "false",
   );
   render();
+  saveState();
 });
 
 function applyStarIntensity() {
   refs.skyStars.setAttribute("data-stars", state.starIntensity);
   document.querySelectorAll(".star-intensity-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.intensity === state.starIntensity);
+    btn.classList.toggle(
+      "active",
+      btn.dataset.intensity === state.starIntensity,
+    );
   });
   saveState();
 }
 
 function applyBadgePrefs() {
   refs.weatherBadge.style.display = state.showWeatherBadge ? "" : "none";
-  document.getElementById("weatherBadgeToggle").setAttribute("aria-checked", state.showWeatherBadge ? "true" : "false");
+  document
+    .getElementById("weatherBadgeToggle")
+    .setAttribute("aria-checked", state.showWeatherBadge ? "true" : "false");
   saveState();
 }
 
@@ -800,7 +808,8 @@ document.getElementById("geoLocateBtn").addEventListener("click", () => {
         const rg = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
         ).then((r) => r.json());
-        state.locationName = rg.address?.city || rg.address?.town || rg.address?.village || null;
+        state.locationName =
+          rg.address?.city || rg.address?.town || rg.address?.village || null;
       } catch (_) {}
       saveState();
       updateLocationLabel();
@@ -830,7 +839,8 @@ document.getElementById("citySearchBtn").addEventListener("click", async () => {
     if (!place) throw new Error("not found");
     state.locationLat = place.latitude;
     state.locationLon = place.longitude;
-    state.locationName = place.name + (place.country ? `, ${place.country}` : "");
+    state.locationName =
+      place.name + (place.country ? `, ${place.country}` : "");
     saveState();
     updateLocationLabel();
     document.getElementById("cityInput").value = "";
@@ -856,6 +866,8 @@ document.querySelectorAll(".star-intensity-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     state.starIntensity = btn.dataset.intensity;
     applyStarIntensity();
+    applyAnimSettings(); // sync particle scale + idle cadence to new intensity
+    saveState();
   });
 });
 
@@ -871,6 +883,7 @@ refs.resetBtn.addEventListener("click", () => {
     `${state.name} arrives, blinking in the light. A fresh start! \ud83c\udf31`,
   );
   render();
+  updateLocationLabel();
   closeSettings();
 });
 
@@ -878,8 +891,8 @@ refs.feedBtn.addEventListener("click", () => {
   checkInteractionWakeUp();
   const before = lastFeedTime;
   applyAction("feed");
-  triggerAnim("action-munch", 700);
-  lockIdleForDuration(700);
+  triggerAnim("action-munch", 850);
+  lockIdleForDuration(850);
   if (lastFeedTime !== before) startDigestCountdown();
 });
 
@@ -890,18 +903,18 @@ document
       checkInteractionWakeUp();
       applyAction(btn.dataset.action);
       if (btn.dataset.action === "play") {
-        triggerAnim("action-excited", 750);
-        lockIdleForDuration(750);
+        triggerAnim("action-excited", 900);
+        lockIdleForDuration(900);
         spawnStars(7);
       }
       if (btn.dataset.action === "sleep") {
-        triggerAnim("action-yawn", 1100);
-        lockIdleForDuration(1100);
+        triggerAnim("action-yawn", 1350);
+        lockIdleForDuration(1350);
         spawnZzz(3);
       }
       if (btn.dataset.action === "clean") {
-        triggerAnim("action-blink", 600);
-        lockIdleForDuration(600);
+        triggerAnim("action-blink", 750);
+        lockIdleForDuration(750);
         spawnBubbles(10);
       }
     });
@@ -947,6 +960,7 @@ refs.themeToggle.setAttribute(
 applyBadgePrefs();
 applyStarIntensity();
 render();
+updateLocationLabel(); // restore label from saved state on every boot
 updateDayNight();
 setInterval(updateDayNight, 60 * 1000);
 setInterval(driftStats, DRIFT_INTERVAL_MS);
