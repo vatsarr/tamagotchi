@@ -1,11 +1,31 @@
-const state = {
-  name: "Pico",
+const SAVE_KEY = "punch_tamagotchi_save";
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return null;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch (e) {}
+}
+
+const defaults = {
+  name: "Punch",
   hunger: 78,
   energy: 72,
   joy: 80,
   clean: 76,
   theme: "light",
+  lastSaved: null,
 };
+
+const saved = loadState();
+const state = saved ? { ...defaults, ...saved } : { ...defaults };
 
 const refs = {
   pet: document.getElementById("pet"),
@@ -42,6 +62,8 @@ function render() {
   refs.joyBar.style.width = `${state.joy}%`;
   refs.cleanBar.style.width = `${state.clean}%`;
   document.documentElement.setAttribute("data-theme", state.theme);
+  state.lastSaved = Date.now();
+  saveState();
 }
 
 function animatePet() {
@@ -53,25 +75,36 @@ function applyAction(action) {
   if (action === "feed") {
     state.hunger = clamp(state.hunger + 16);
     state.clean = clamp(state.clean - 4);
-    setMessage(`${state.name} crunches a tiny snack and looks pleased.`);
+    setMessage(`${state.name} grabs a snack and munches happily.`);
   }
   if (action === "play") {
     state.joy = clamp(state.joy + 18);
     state.energy = clamp(state.energy - 8);
     state.hunger = clamp(state.hunger - 6);
-    setMessage(`${state.name} hops in a circle like a happy pika.`);
+    setMessage(`${state.name} leaps around and chatters with delight.`);
   }
   if (action === "sleep") {
     state.energy = clamp(state.energy + 20);
     state.joy = clamp(state.joy + 4);
-    setMessage(`${state.name} curls up for a soft little mountain nap.`);
+    setMessage(`${state.name} curls up and hugs the stuffed orangutan.`);
   }
   if (action === "clean") {
     state.clean = clamp(state.clean + 22);
-    setMessage(`${state.name} is fluffed up and tidy again.`);
+    setMessage(`${state.name} is groomed and fluffy again.`);
   }
   animatePet();
   render();
+}
+
+function applyOfflineDrift() {
+  if (!state.lastSaved) return;
+  const elapsed = Math.floor((Date.now() - state.lastSaved) / 12000);
+  if (elapsed <= 0) return;
+  const ticks = Math.min(elapsed, 120);
+  state.hunger = clamp(state.hunger - 3 * ticks);
+  state.energy = clamp(state.energy - 2 * ticks);
+  state.joy = clamp(state.joy - 2 * ticks);
+  state.clean = clamp(state.clean - 1 * ticks);
 }
 
 function driftStats() {
@@ -85,11 +118,11 @@ function driftStats() {
 refs.renameBtn.addEventListener("click", () => {
   const next = refs.nameInput.value.trim();
   if (!next) {
-    setMessage("Your pika is waiting for a proper name.");
+    setMessage("Your monkey is waiting for a proper name.");
     return;
   }
   state.name = next;
-  setMessage(`${state.name} twitches its ears. Name updated.`);
+  setMessage(`${state.name} blinks curiously. Name updated.`);
   render();
 });
 
@@ -101,6 +134,16 @@ refs.themeToggle.addEventListener("click", () => {
   state.theme = state.theme === "light" ? "dark" : "light";
   render();
 });
+
+// Apply stat decay for time spent away
+if (state.lastSaved) {
+  applyOfflineDrift();
+  const secondsAway = Math.floor((Date.now() - state.lastSaved) / 1000);
+  if (secondsAway > 60) {
+    const mins = Math.floor(secondsAway / 60);
+    setMessage(`${state.name} missed you! You were away for ${mins} minute${mins !== 1 ? "s" : ""}.`);
+  }
+}
 
 setInterval(driftStats, 12000);
 render();

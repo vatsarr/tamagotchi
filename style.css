@@ -1,26 +1,26 @@
-/* Art direction: cozy alpine toy â warm, playful, rounded */
+/* Art direction: cozy Japanese snow monkey toy — warm, soft, round like Punch */
 :root {
-  --bg: #f6f0e6;
-  --surface: #fffaf2;
-  --surface-2: #f0e3d2;
-  --text: #43352d;
-  --muted: #876f62;
-  --accent: #c96f3a;
-  --accent-2: #8fbf73;
-  --meter-bg: #e8d8c6;
-  --shadow: 0 14px 30px rgba(91, 62, 44, 0.16);
+  --bg: #f2ede8;
+  --surface: #faf7f4;
+  --surface-2: #ede5dc;
+  --text: #3a2e28;
+  --muted: #7d6a60;
+  --accent: #c0524a;
+  --accent-2: #7aaa5a;
+  --meter-bg: #e2d4c8;
+  --shadow: 0 14px 30px rgba(80, 50, 40, 0.16);
 }
 
 [data-theme="dark"] {
-  --bg: #1f1b18;
-  --surface: #2a2521;
-  --surface-2: #382f29;
-  --text: #f5eadf;
-  --muted: #d2bcac;
-  --accent: #f0a35b;
-  --accent-2: #9dcb85;
-  --meter-bg: #51453c;
-  --shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  --bg: #1e1a17;
+  --surface: #28221f;
+  --surface-2: #352b26;
+  --text: #f2e8e0;
+  --muted: #ccb8aa;
+  --accent: #e87060;
+  --accent-2: #92c472;
+  --meter-bg: #4d3f38;
+  --shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
 }
 
 * {
@@ -30,7 +30,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: "Nunito", sans-serif;
-  background: radial-gradient(circle at top, #fff8ef 0%, var(--bg) 60%);
+  background: radial-gradient(circle at top, #fff5ef 0%, var(--bg) 60%);
   color: var(--text);
 }
 
@@ -89,7 +89,7 @@ h1 {
 }
 .sky {
   height: 84px;
-  background: linear-gradient(180deg, #c9e8ff 0%, #f9f4ea 100%);
+  background: linear-gradient(180deg, #b8daf5 0%, #f5ede4 100%);
 }
 .pet-stage {
   position: relative;
@@ -97,15 +97,15 @@ h1 {
   background:
     radial-gradient(
       circle at 50% 30%,
-      rgba(255, 255, 255, 0.7),
+      rgba(255, 255, 255, 0.65),
       transparent 40%
     ),
-    linear-gradient(180deg, transparent 0%, rgba(143, 191, 115, 0.12) 100%);
+    linear-gradient(180deg, transparent 0%, rgba(180, 140, 110, 0.08) 100%);
 }
 .pet {
   position: relative;
   width: 220px;
-  height: 220px;
+  height: 230px;
   margin: 0 auto;
   transform-origin: center bottom;
   transition: transform 180ms ease;
@@ -113,150 +113,193 @@ h1 {
 .pet.bounce {
   transform: translateY(-6px) scale(1.02);
 }
-.ear,
-.body,
-.arm,
-.foot,
-.belly,
-.cheek,
-.nose,
-.eye,
-.mouth,
-.whisker {
+
+/* All parts absolutely positioned */
+.ear, .body, .arm, .foot, .belly, .cheek,
+.nose, .eye, .mouth, .face, .head, .tail {
   position: absolute;
 }
-.ear {
-  width: 62px;
+
+/* ── BODY (grey-brown, oval) ── */
+.body {
+  left: 38px;
+  right: 38px;
+  top: 90px;
+  bottom: 20px;
+  background: #a08070;
+  border-radius: 46% 46% 44% 44%;
+}
+
+/* Lighter belly patch */
+.belly {
+  left: 38px;
+  right: 38px;
+  bottom: 14px;
+  height: 68px;
+  background: #d4bfb0;
+  border-radius: 48% 48% 44% 44%;
+}
+
+/* ── HEAD (large, round, sits on body) ── */
+.head {
+  width: 126px;
+  height: 120px;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #a08070;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* Inner face disc — pale cream/pink for the macaque face */
+.face {
+  width: 96px;
   height: 90px;
-  top: 8px;
-  background: #c49a72;
-  border-radius: 55% 55% 38% 38%;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e8cfc0;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* ── EARS (small, round, on sides of head) ── */
+.ear {
+  width: 34px;
+  height: 34px;
+  top: 18px;
+  background: #a08070;
+  border-radius: 50%;
+  z-index: 1;
 }
 .ear::after {
   content: "";
   position: absolute;
-  inset: 12px 12px 20px;
-  background: #f2d8c4;
-  border-radius: inherit;
+  inset: 7px;
+  background: #d4a090;
+  border-radius: 50%;
 }
 .ear-left {
-  left: 28px;
-  transform: rotate(-15deg);
+  left: 2px;
 }
 .ear-right {
-  right: 28px;
-  transform: rotate(15deg);
+  right: 2px;
 }
-.body {
-  left: 40px;
-  right: 40px;
-  top: 60px;
-  bottom: 24px;
-  background: #b88b63;
-  border-radius: 48% 48% 42% 42%;
-}
-.belly {
-  left: 42px;
-  right: 42px;
-  bottom: 22px;
-  height: 74px;
-  background: #f3e0cb;
-  border-radius: 48% 48% 44% 44%;
-}
-.arm {
-  width: 36px;
-  height: 82px;
-  top: 104px;
-  background: #b88b63;
-  border-radius: 40px;
-}
-.arm-left {
-  left: 28px;
-  transform: rotate(18deg);
-}
-.arm-right {
-  right: 28px;
-  transform: rotate(-18deg);
-}
-.foot {
-  width: 44px;
-  height: 20px;
-  bottom: 12px;
-  background: #8f684b;
-  border-radius: 20px;
-}
-.foot-left {
-  left: 54px;
-}
-.foot-right {
-  right: 54px;
-}
+
+/* ── EYES (dark, expressive) ── */
 .eye {
-  width: 11px;
-  height: 15px;
-  top: 98px;
-  background: #2c211a;
+  width: 13px;
+  height: 16px;
+  top: 34px;
+  background: #1e1510;
+  border-radius: 50%;
+  z-index: 2;
+}
+.eye::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  top: 3px;
+  left: 3px;
+  background: rgba(255,255,255,0.7);
   border-radius: 50%;
 }
 .eye-left {
-  left: 82px;
+  left: 20px;
 }
 .eye-right {
-  right: 82px;
+  right: 20px;
 }
+
+/* ── NOSE (flat, broad, pinkish-red — macaque style) ── */
 .nose {
-  width: 12px;
-  height: 9px;
-  top: 116px;
-  left: 104px;
-  background: #5b4031;
-  border-radius: 50% 50% 60% 60%;
-}
-.mouth {
-  width: 24px;
-  height: 12px;
-  top: 126px;
-  left: 98px;
-  border-bottom: 3px solid #5b4031;
-  border-radius: 0 0 20px 20px;
-}
-.cheek {
-  width: 18px;
-  height: 12px;
-  top: 120px;
-  background: #d58d7f;
-  opacity: 0.7;
+  width: 22px;
+  height: 14px;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #c06050;
   border-radius: 50%;
+  z-index: 2;
+}
+
+/* ── MOUTH ── */
+.mouth {
+  width: 22px;
+  height: 10px;
+  top: 67px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom: 2.5px solid #7a4030;
+  border-radius: 0 0 18px 18px;
+  z-index: 2;
+}
+
+/* ── CHEEKS (rosy pink circles) ── */
+.cheek {
+  width: 20px;
+  height: 14px;
+  top: 56px;
+  background: #e0806a;
+  opacity: 0.55;
+  border-radius: 50%;
+  z-index: 2;
 }
 .cheek-left {
-  left: 60px;
+  left: 6px;
 }
 .cheek-right {
-  right: 60px;
+  right: 6px;
 }
-.whisker {
-  width: 26px;
-  height: 2px;
-  background: #5b4031;
-  top: 122px;
+
+/* ── ARMS (stubby, round at end) ── */
+.arm {
+  width: 30px;
+  height: 70px;
+  top: 108px;
+  background: #a08070;
+  border-radius: 30px;
+  z-index: 1;
 }
-.whisker-left-top {
-  left: 42px;
-  transform: rotate(-12deg);
+.arm-left {
+  left: 20px;
+  transform: rotate(14deg);
 }
-.whisker-left-bottom {
-  left: 42px;
-  top: 130px;
-  transform: rotate(10deg);
+.arm-right {
+  right: 20px;
+  transform: rotate(-14deg);
 }
-.whisker-right-top {
-  right: 42px;
-  transform: rotate(12deg);
+
+/* ── FEET (wide, round) ── */
+.foot {
+  width: 46px;
+  height: 22px;
+  bottom: 10px;
+  background: #88655a;
+  border-radius: 22px;
+  z-index: 1;
 }
-.whisker-right-bottom {
-  right: 42px;
-  top: 130px;
-  transform: rotate(-10deg);
+.foot-left {
+  left: 46px;
+}
+.foot-right {
+  right: 46px;
+}
+
+/* ── TAIL (small, curled upward) ── */
+.tail {
+  width: 24px;
+  height: 36px;
+  bottom: 28px;
+  right: 24px;
+  border: 5px solid #88655a;
+  border-radius: 50% 50% 50% 0;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  transform: rotate(-30deg);
+  z-index: 0;
 }
 
 .status-panel {
@@ -363,18 +406,16 @@ h1 {
   }
   .pet {
     width: 190px;
-    height: 190px;
+    height: 200px;
   }
-  .eye-left {
-    left: 70px;
+  .head {
+    width: 110px;
+    height: 106px;
   }
-  .eye-right {
-    right: 70px;
+  .face {
+    width: 84px;
+    height: 80px;
   }
-  .nose {
-    left: 89px;
-  }
-  .mouth {
-    left: 83px;
-  }
+  .eye-left { left: 16px; }
+  .eye-right { right: 16px; }
 }
