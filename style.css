@@ -198,17 +198,17 @@ h1 {
   overflow: hidden;
 }
 
-/* Sun and moon */
-.sky-orb {
+/* Sun and moon — emoji orbs */
+.sky-sun, .sky-moon {
   position: absolute;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  top: 18px;
-  transition: left 2s ease, opacity 2s ease, background 2s ease, box-shadow 2s ease;
+  font-size: 26px;
+  line-height: 1;
+  top: 14px;
+  user-select: none;
+  transition: left 2s ease, opacity 2s ease;
+  filter: drop-shadow(0 0 6px rgba(255,220,80,0.7));
 }
-.sky-sun  { background: #ffd553; box-shadow: 0 0 18px 6px #ffdd7788; }
-.sky-moon { background: #d8d8f0; box-shadow: 0 0 14px 4px #a0a0cc66; opacity: 0; }
+.sky-moon { opacity: 0; filter: drop-shadow(0 0 5px rgba(180,180,220,0.6)); }
 
 /* Stars */
 .sky-stars {
@@ -224,6 +224,43 @@ h1 {
   height: 2px;
   background: #fff;
   border-radius: 50%;
+  animation: star-twinkle var(--twinkle-dur, 3.5s) ease-in-out infinite;
+  animation-delay: var(--twinkle-delay, 0s);
+}
+@keyframes star-twinkle {
+  0%, 100% { opacity: var(--star-hi, 0.55); transform: scale(1); }
+  50%       { opacity: var(--star-lo, 0.25); transform: scale(0.85); }
+}
+
+/* Shooting star */
+.shooting-star {
+  position: absolute;
+  top: var(--ss-y, 20%);
+  left: var(--ss-x, 10%);
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+  z-index: 5;
+  animation: shoot var(--ss-dur, 0.7s) ease-out forwards;
+  transform-origin: center;
+}
+.shooting-star::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--ss-tail, 60px);
+  height: 1.5px;
+  background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+  border-radius: 2px;
+}
+@keyframes shoot {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  70%  { opacity: 0.8; }
+  100% { transform: translate(var(--ss-dx, 120px), var(--ss-dy, 60px)) scale(0.3); opacity: 0; }
 }
 
 /* Time badges — glass pill overlaid on sky */
@@ -277,13 +314,11 @@ h1 {
   z-index: 2;
 }
 
-/* Pet stage — frosted glass panel */
+/* Pet stage — scenic backdrop; background is set dynamically via JS updateStageBackground() */
 .pet-stage {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur-light);
-  -webkit-backdrop-filter: var(--glass-blur-light);
   padding: 16px 12px 0;
   position: relative;
+  transition: background 2s ease;
 }
 
 /* Status panel — solid-ish glass */
@@ -443,6 +478,26 @@ h1 {
 [data-action="clean"]::before { content: "🛁"; }
 
 .btn-label { font-size: 12px; font-weight: 600; }
+
+/* ── FEED BUTTON BORDER COOLDOWN ────────────────────────────────── */
+
+/* SVG ring is injected by JS into #feedBtn; hide countdown span */
+.digest-countdown { display: none !important; }
+
+#feedBtn { position: relative; }
+
+.feed-ring-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity var(--t-mid) var(--ease-out);
+}
+#feedBtn.digesting .feed-ring-svg { opacity: 1; }
 
 
 /* ── DIALOG / MESSAGE CARD ─────────────────────────────────────── */

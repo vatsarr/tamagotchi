@@ -109,7 +109,7 @@
       <header class="topbar glass">
         <div>
           <p class="eyebrow">Pocket companion</p>
-          <h1>Punch Tamagotchi</h1>
+          <h1 id="appTitle">Punch</h1>
         </div>
         <button class="icon-button" id="settingsBtn" aria-label="Settings">
           <svg
@@ -194,8 +194,8 @@
 
       <section class="pet-card glass">
         <div class="sky">
-          <div class="sky-orb sky-sun"></div>
-          <div class="sky-orb sky-moon"></div>
+          <span class="sky-sun" aria-hidden="true">☀️</span>
+          <span class="sky-moon" aria-hidden="true">🌕</span>
           <div class="sky-stars" id="skyStars"></div>
           <span class="time-badge" id="timeBadge"></span>
           <div class="weather-layer" id="weatherLayer"></div>
@@ -250,10 +250,6 @@
       <section class="controls">
         <button data-action="feed" id="feedBtn">
           <span class="btn-label">Feed</span>
-          <svg class="digest-ring" viewBox="0 0 36 36" aria-hidden="true">
-            <circle class="digest-ring-track" cx="18" cy="18" r="15.9" />
-            <circle class="digest-ring-fill" cx="18" cy="18" r="15.9" />
-          </svg>
           <span class="digest-countdown" id="digestCountdown"></span>
         </button>
         <button data-action="play">Play</button>

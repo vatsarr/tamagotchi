@@ -134,32 +134,76 @@ const refs = {
   timeBadge:   document.getElementById("timeBadge"),
   sunEl:       document.querySelector(".sky-sun"),
   moonEl:      document.querySelector(".sky-moon"),
+  sunEl2:      document.querySelector(".sky-sun"),
   weatherBadge: document.getElementById("weatherBadge"),
   weatherLayer: document.getElementById("weatherLayer"),
   feedBtn:      document.getElementById("feedBtn"),
+  appTitle:     document.getElementById("appTitle"),
 };
 
-const digestFill    = refs.feedBtn.querySelector(".digest-ring-fill");
-const digestCountEl = document.getElementById("digestCountdown");
+// ── FEED BUTTON BORDER RING (SVG arc) ───────────────────────
+// Inject a rounded-rect SVG ring that traces the button border.
+// Arc sweeps clockwise from top; progress = elapsed fraction.
+
+const NS = "http://www.w3.org/2000/svg";
+const feedRingSvg = document.createElementNS(NS, "svg");
+feedRingSvg.classList.add("feed-ring-svg");
+feedRingSvg.setAttribute("aria-hidden", "true");
+
+const ringTrack = document.createElementNS(NS, "rect");
+const ringFill  = document.createElementNS(NS, "rect");
+
+function setupRingRect(el, color, opacity) {
+  el.setAttribute("x", "1.5"); el.setAttribute("y", "1.5");
+  el.setAttribute("rx", "20.5"); el.setAttribute("ry", "20.5");
+  el.setAttribute("fill", "none");
+  el.setAttribute("stroke", color);
+  el.setAttribute("stroke-width", "2.5");
+  el.setAttribute("stroke-opacity", opacity);
+}
+setupRingRect(ringTrack, "#ffffff", "0.18");
+setupRingRect(ringFill,  "#ff9500", "1");
+ringFill.setAttribute("stroke-linecap", "round");
+
+feedRingSvg.appendChild(ringTrack);
+feedRingSvg.appendChild(ringFill);
+refs.feedBtn.appendChild(feedRingSvg);
+
+function updateRingArc(pct) {
+  // Measure actual button size each tick (handles reflow)
+  const w = refs.feedBtn.offsetWidth;
+  const h = refs.feedBtn.offsetHeight;
+  feedRingSvg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  ringTrack.setAttribute("width",  w - 3); ringTrack.setAttribute("height", h - 3);
+  ringFill.setAttribute("width",   w - 3); ringFill.setAttribute("height",  h - 3);
+  // Perimeter of the rounded rect (approx)
+  const r = 20.5;
+  const perim = 2 * ((w - 3 - 2*r) + (h - 3 - 2*r)) + 2 * Math.PI * r;
+  const dashLen = perim * pct;
+  // Start arc from the top-center: offset = 1/4 of perimeter from start of path
+  const offset = perim * 0.25;
+  ringFill.setAttribute("stroke-dasharray",  `${dashLen} ${perim}`);
+  ringFill.setAttribute("stroke-dashoffset", offset);
+  // Also set track perimeter
+  ringTrack.setAttribute("stroke-dasharray", `${perim}`);
+}
 
 let digestTimer = null;
 function startDigestCountdown() {
   if (digestTimer) clearInterval(digestTimer);
+  refs.feedBtn.classList.add("digesting");
   digestTimer = setInterval(() => {
     const remaining = FEED_COOLDOWN_MS - (Date.now() - lastFeedTime);
     if (remaining <= 0) {
       clearInterval(digestTimer);
       digestTimer = null;
-      digestFill.style.strokeDashoffset = "0";
-      digestCountEl.textContent = "";
+      updateRingArc(0);
       refs.feedBtn.classList.remove("digesting");
       return;
     }
-    const frac = remaining / FEED_COOLDOWN_MS;
-    digestFill.style.strokeDashoffset = (CIRC * frac).toFixed(1);
-    digestCountEl.textContent = Math.ceil(remaining / 1000) + "s";
-    refs.feedBtn.classList.add("digesting");
-  }, 500);
+    const elapsed = 1 - remaining / FEED_COOLDOWN_MS;
+    updateRingArc(elapsed);
+  }, 100);
 }
 
 
@@ -226,6 +270,7 @@ function syncPetClasses() {
 
 function render() {
   refs.nameInput.value      = state.name;
+  refs.appTitle.textContent = state.name;
   refs.moodText.textContent = moodLabel();
   setBarState(refs.hungerBar, refs.statHunger, state.hunger);
   setBarState(refs.energyBar, refs.statEnergy, state.energy);
@@ -316,13 +361,62 @@ function applyAction(action) {
 
 // ── 6. DAY / NIGHT MECHANIC ──────────────────────────────────
 
-for (let i = 0; i < 28; i++) {
+for (let i = 0; i < 38; i++) {
   const s = document.createElement("span");
-  s.style.left    = Math.random() * 96 + "%";
-  s.style.top     = Math.random() * 80 + "%";
-  s.style.opacity = (0.4 + Math.random() * 0.6).toFixed(2);
+  const hi = (0.35 + Math.random() * 0.25).toFixed(2);
+  const lo = (0.15 + Math.random() * 0.12).toFixed(2);
+  const dur = (2.8 + Math.random() * 4).toFixed(2);
+  const delay = (Math.random() * 6).toFixed(2);
+  const size = Math.random() < 0.2 ? "3px" : "2px";
+  s.style.cssText = [
+    `left:${(Math.random() * 96).toFixed(1)}%`,
+    `top:${(Math.random() * 82).toFixed(1)}%`,
+    `width:${size}`,
+    `height:${size}`,
+    `--star-hi:${hi}`,
+    `--star-lo:${lo}`,
+    `--twinkle-dur:${dur}s`,
+    `--twinkle-delay:${delay}s`,
+  ].join(";");
   refs.skyStars.appendChild(s);
 }
+
+// ── Shooting star scheduler ────────────────────────────────
+function spawnShootingStar() {
+  const sky = document.querySelector(".sky");
+  if (!sky) return;
+  const el = document.createElement("div");
+  el.className = "shooting-star";
+  // Start from upper-left area, travel down-right
+  const startX = (5  + Math.random() * 55).toFixed(1);
+  const startY = (5  + Math.random() * 40).toFixed(1);
+  const dx     = (80 + Math.random() * 80).toFixed(0);
+  const dy     = (30 + Math.random() * 50).toFixed(0);
+  const dur    = (0.55 + Math.random() * 0.45).toFixed(2);
+  const tail   = (50  + Math.random() * 60).toFixed(0);
+  el.style.cssText = [
+    `--ss-x:${startX}%`,
+    `--ss-y:${startY}%`,
+    `--ss-dx:${dx}px`,
+    `--ss-dy:${dy}px`,
+    `--ss-dur:${dur}s`,
+    `--ss-tail:${tail}px`,
+  ].join(";");
+  sky.appendChild(el);
+  setTimeout(() => el.remove(), parseFloat(dur) * 1000 + 100);
+}
+
+function scheduleShootingStar() {
+  // Only fire if it's a night period AND weather is clear
+  const nightPeriods = ["evening", "night", "latenight"];
+  const isNight  = nightPeriods.includes(currentTimePeriod);
+  const isClear  = currentWeatherType === "clear" || currentWeatherType === null;
+  if (isNight && isClear) spawnShootingStar();
+  // Re-schedule randomly every 18–55 seconds
+  setTimeout(scheduleShootingStar, 18000 + Math.random() * 37000);
+}
+// Kick off after a short delay so state is initialised
+setTimeout(scheduleShootingStar, 8000);
 
 function getTimePeriod(hour) {
   return TIME_PERIODS.find(p => hour >= p.start && hour < p.end) || TIME_PERIODS[0];
@@ -331,6 +425,19 @@ function getTimePeriod(hour) {
 function orbPosition(hour, minutes) {
   const frac = (hour * 60 + minutes) / (24 * 60);
   return Math.round(4 + frac * 88) + "%";
+}
+
+// Returns the correct moon phase emoji based on today's date
+function getMoonPhaseEmoji() {
+  // Known new moon reference: Jan 6 2000 (J2000 epoch)
+  const knownNewMoon = new Date(2000, 0, 6).getTime();
+  const lunarCycle   = 29.530588853 * 24 * 60 * 60 * 1000; // ms
+  const now          = Date.now();
+  const phase        = ((now - knownNewMoon) % lunarCycle + lunarCycle) % lunarCycle;
+  const fraction     = phase / lunarCycle; // 0 = new moon, 0.5 = full
+  // 8 phases, each ~3.69 days wide
+  const index = Math.round(fraction * 8) % 8;
+  return ["\uD83C\uDF11","\uD83C\uDF12","\uD83C\uDF13","\uD83C\uDF14","\uD83C\uDF15","\uD83C\uDF16","\uD83C\uDF17","\uD83C\uDF18"][index];
 }
 
 function getCombinedMessage(period, wx) {
@@ -359,6 +466,28 @@ function getCombinedMessage(period, wx) {
 
 let lastPeriodName = null;
 
+const STAGE_PALETTES = {
+  latenight: { base: "#07060f", skyTop: "#0a0818", skyBot: "#0d0620", ground: "#0e0c20", hill: "#090714" },
+  dawn:      { base: "#d4a97a", skyTop: "#e8925a", skyBot: "#f0b880", ground: "#9a6e42", hill: "#7a5430" },
+  morning:   { base: "#b8d8e8", skyTop: "#80c0e0", skyBot: "#c8e8d0", ground: "#5a9a40", hill: "#408030" },
+  day:       { base: "#90c8f0", skyTop: "#4ab0f0", skyBot: "#a0d0e8", ground: "#4a9830", hill: "#387020" },
+  afternoon: { base: "#a0cce0", skyTop: "#60b8e8", skyBot: "#b8d8d0", ground: "#589838", hill: "#407828" },
+  dusk:      { base: "#c87840", skyTop: "#d05820", skyBot: "#d88040", ground: "#8a4820", hill: "#6a3415" },
+  evening:   { base: "#1a1440", skyTop: "#1e1850", skyBot: "#281840", ground: "#160f38", hill: "#100b28" },
+  night:     { base: "#0c0a22", skyTop: "#0e0c2e", skyBot: "#130a28", ground: "#0c0a22", hill: "#080618" },
+};
+
+function updateStageBackground(periodName) {
+  const p = STAGE_PALETTES[periodName] || STAGE_PALETTES.day;
+  const stage = refs.petStage;
+  stage.style.background = [
+    `radial-gradient(ellipse 160% 45% at 50% 110%, ${p.hill} 0%, transparent 65%)`,
+    `radial-gradient(ellipse 180% 35% at 50% 118%, ${p.ground} 0%, transparent 60%)`,
+    `linear-gradient(180deg, ${p.skyTop} 0%, ${p.skyBot} 100%)`,
+    p.base,
+  ].join(", ");
+}
+
 function updateDayNight() {
   const now    = new Date();
   const hour   = now.getHours();
@@ -369,10 +498,12 @@ function updateDayNight() {
   checkPeriodWakeUp(period.name);
   currentTimePeriod = period.name;
   syncPetClasses();
+  updateStageBackground(period.name);
 
   const pos = orbPosition(hour, minute);
   refs.sunEl.style.left  = pos;
   refs.moonEl.style.left = pos;
+  refs.moonEl.textContent = getMoonPhaseEmoji();
   refs.timeBadge.textContent = period.label;
 
   if (period.name !== lastPeriodName) {
